@@ -11,10 +11,14 @@ function NoteInput({ onSave }) {
 
   const handleAdd = async () => {
     if (!text.trim()) return;
+    
+    const currentText = text.trim();
+    // Clear text immediately
+    setText('');
+    
     setSaving(true);
     try {
-      await onSave(text.trim());
-      setText('');
+      await onSave(currentText);
       setExpanded(false);
     } catch (error) {
       console.error('Error saving note:', error);

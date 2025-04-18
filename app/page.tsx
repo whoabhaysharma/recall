@@ -9,6 +9,7 @@ import ViewToggle from '../components/ViewToggle';
 import NoteList from '../components/NoteList';
 import AIPopup from '../components/AIPopup';
 import { MessageSquare, Sparkles } from 'lucide-react';
+import { v4 as uuidv4 } from 'uuid';
 
 // Types for our application
 interface Note {
@@ -18,6 +19,8 @@ interface Note {
   color: string;
   createdAt: Date;
   updatedAt?: Date;
+  isOptimistic?: boolean;
+  isError?: boolean;
 }
 
 interface Pagination {
@@ -92,11 +95,16 @@ export default function NotesApp() {
       const coloredNotes = applyColors(data.notes);
       
       if (reset) {
-        // Replace all notes
-        setNotes(coloredNotes);
+        // Replace all notes (filter out optimistic ones that might already be saved)
+        const optimisticNotes = notes.filter(n => n.isOptimistic);
+        setNotes([...optimisticNotes, ...coloredNotes]);
       } else {
         // Append to existing notes
-        setNotes(prev => [...prev, ...coloredNotes]);
+        setNotes(prev => {
+          // Remove optimistic notes from previous array before appending new notes
+          const nonOptimistic = prev.filter(n => !n.isOptimistic);
+          return [...nonOptimistic, ...coloredNotes];
+        });
       }
       
       setPagination(data.pagination);
@@ -115,57 +123,129 @@ export default function NotesApp() {
   }, [pagination.hasMore, pagination.page, loadingMore]);
 
   const createNote = async (content: string) => {
+    // Create optimistic note that will be immediately shown in UI
+    const optimisticNote: Note = {
+      id: uuidv4(), // Temporary ID
+      content,
+      pinned: false,
+      color: getRandomColor(),
+      createdAt: new Date(),
+      isOptimistic: true,
+    };
+
+    // Add optimistic note to state immediately
+    setNotes(prev => [optimisticNote, ...prev]);
+
     try {
-      await axios.post('/api/notes', { content });
-      // Refetch first page to include new note
-      fetchNotes(1, true);
+      // Send actual API request
+      const { data } = await axios.post('/api/notes', { content });
+      
+      // Replace optimistic note with real one from API
+      setNotes(prev => prev.map(note => 
+        note.isOptimistic && note.content === content 
+          ? { ...data.note, color: note.color } // Keep the same color
+          : note
+      ));
+
+      // Update pagination if needed
+      setPagination(prev => ({
+        ...prev,
+        total: prev.total + 1
+      }));
     } catch (error) {
       console.error("Error creating note:", error);
+      
+      // Mark optimistic note as having an error
+      setNotes(prev => prev.map(note => 
+        note.isOptimistic && note.content === content
+          ? { ...note, isError: true }
+          : note
+      ));
+
+      // Show a toast or notification here if you have one
       throw error;
     }
   };
 
   const updateNote = async (id: string, content: string) => {
+    // Apply optimistic update immediately
+    setNotes(prevNotes => 
+      prevNotes.map(note => 
+        note.id === id ? { ...note, content, updatedAt: new Date() } : note
+      )
+    );
+
     try {
+      // Send actual API request
       await axios.patch(`/api/notes/${id}`, { content });
-      // Update the note in the current state to avoid full refetch
-      setNotes(prevNotes => 
-        prevNotes.map(note => 
-          note.id === id ? { ...note, content } : note
-        )
-      );
     } catch (error) {
       console.error("Error updating note:", error);
+      
+      // Revert optimistic update on error
+      fetchNotes(1, true);
+      
+      // Show a toast or notification here if you have one
       throw error;
     }
   };
 
   const deleteNote = async (id: string) => {
+    // Get a copy of the note before removing it
+    const noteToDelete = notes.find(note => note.id === id);
+    
+    // Remove note optimistically from state
+    setNotes(prevNotes => prevNotes.filter(note => note.id !== id));
+    
     try {
+      // Send actual API request
       await axios.delete(`/api/notes/${id}`);
-      // Remove the note from current state
-      setNotes(prevNotes => prevNotes.filter(note => note.id !== id));
+      
+      // Update pagination
+      setPagination(prev => ({
+        ...prev,
+        total: Math.max(0, prev.total - 1)
+      }));
     } catch (error) {
       console.error("Error deleting note:", error);
+      
+      // If deletion fails, put the note back
+      if (noteToDelete) {
+        setNotes(prev => [...prev, noteToDelete]);
+      }
+      
+      // Show a toast or notification here if you have one
     }
   };
 
   const togglePinNote = async (id: string) => {
-    try {
-      const note = notes.find((n) => n.id === id);
-      if (note) {
-        const newPinnedStatus = !note.pinned;
+    // Find the note to pin/unpin
+    const note = notes.find((n) => n.id === id);
+    
+    if (note) {
+      const newPinnedStatus = !note.pinned;
+      
+      // Update optimistically
+      setNotes(prevNotes => 
+        prevNotes.map(note => 
+          note.id === id ? { ...note, pinned: newPinnedStatus } : note
+        )
+      );
+      
+      try {
+        // Send actual API request
         await axios.patch(`/api/notes/${id}/pin`, { pinned: newPinnedStatus });
+      } catch (error) {
+        console.error("Error toggling pin status:", error);
         
-        // Update the note in the current state
+        // Revert optimistic update on error
         setNotes(prevNotes => 
           prevNotes.map(note => 
-            note.id === id ? { ...note, pinned: newPinnedStatus } : note
+            note.id === id ? { ...note, pinned: !newPinnedStatus } : note
           )
         );
+        
+        // Show a toast or notification here if you have one
       }
-    } catch (error) {
-      console.error("Error toggling pin status:", error);
     }
   };
 

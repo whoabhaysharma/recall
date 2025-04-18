@@ -57,26 +57,42 @@ function NoteList({ notes, view, handlers, loading, hasMore, onLoadMore, loading
       loadMore={onLoadMore}
       loading={loadingMore}
     >
-      <motion.div
-        layout
-        className={
-          view === 'grid'
-            ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'
-            : 'space-y-4'
-        }
-      >
-        <AnimatePresence>
+      <div className={
+        view === 'grid'
+          ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'
+          : 'space-y-4'
+      }>
+        <AnimatePresence mode="popLayout">
           {sorted.map((note) => (
-            <NoteCard
+            <motion.div
               key={note.id}
-              note={note}
-              onDelete={handlers.delete}
-              onEdit={handlers.edit}
-              onPin={handlers.pin}
-            />
+              layout
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={{ 
+                type: "spring", 
+                stiffness: 500, 
+                damping: 30, 
+                mass: 1
+              }}
+            >
+              <NoteCard
+                note={note}
+                onDelete={handlers.delete}
+                onEdit={handlers.edit}
+                onPin={handlers.pin}
+              />
+            </motion.div>
           ))}
         </AnimatePresence>
-      </motion.div>
+        
+        {loadingMore && (
+          <div className="col-span-full flex justify-center py-4">
+            <Loader2 size={24} className="text-blue-500 animate-spin" />
+          </div>
+        )}
+      </div>
     </InfiniteScroll>
   );
 }
