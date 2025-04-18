@@ -7,12 +7,37 @@ import { createNote, getAllNotes } from "../../../db/operations/noteOperations";
 import { validateNote } from "../../../db/schemas/note";
 
 /**
- * GET /api/notes - Get all notes
+ * GET /api/notes - Get all notes with pagination
+ * Query parameters:
+ * - page: Page number (default: 1)
+ * - limit: Notes per page (default: 20)
  */
-export async function GET() {
+export async function GET(request) {
   try {
-    const notes = await getAllNotes();
-    return NextResponse.json(notes);
+    // Parse query parameters
+    const url = new URL(request.url);
+    const page = parseInt(url.searchParams.get('page') || '1', 10);
+    const limit = parseInt(url.searchParams.get('limit') || '20', 10);
+    
+    // Validate parameters
+    if (isNaN(page) || page < 1) {
+      return NextResponse.json(
+        { error: "Invalid page parameter" },
+        { status: 400 }
+      );
+    }
+    
+    if (isNaN(limit) || limit < 1 || limit > 100) {
+      return NextResponse.json(
+        { error: "Invalid limit parameter (must be between 1 and 100)" },
+        { status: 400 }
+      );
+    }
+    
+    // Get notes with pagination
+    const result = await getAllNotes({ page, limit });
+    
+    return NextResponse.json(result);
   } catch (error) {
     console.error("❌ Error fetching notes:", error);
     return NextResponse.json(

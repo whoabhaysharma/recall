@@ -1,7 +1,7 @@
 // NotesApp.js
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import SearchBar from '../components/SearchBar';
 import NoteInput from '../components/NoteInput';
@@ -17,6 +17,20 @@ interface Note {
   pinned: boolean;
   color: string;
   createdAt: Date;
+  updatedAt?: Date;
+}
+
+interface Pagination {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+  hasMore: boolean;
+}
+
+interface NotesResponse {
+  notes: Note[];
+  pagination: Pagination;
 }
 
 interface Message {
@@ -32,6 +46,14 @@ export default function NotesApp() {
   const [aiMsgs, setAiMsgs] = useState<Message[]>([]);
   const [aiLoading, setAiLoading] = useState(false);
   const [loadingNotes, setLoadingNotes] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [pagination, setPagination] = useState<Pagination>({
+    total: 0,
+    page: 0,
+    limit: 20,
+    totalPages: 0,
+    hasMore: false
+  });
 
   const getRandomColor = () => {
     const colors = [
@@ -46,28 +68,57 @@ export default function NotesApp() {
     return colors[Math.floor(Math.random() * colors.length)];
   };
 
-  const fetchNotes = async () => {
-    setLoadingNotes(true);
+  const applyColors = (notesArray: Note[]): Note[] => {
+    return notesArray.map(note => ({
+      ...note,
+      color: getRandomColor(),
+      createdAt: note.createdAt ? new Date(note.createdAt) : new Date(),
+    }));
+  };
+
+  const fetchNotes = async (page = 1, reset = true) => {
+    const isInitialLoad = page === 1;
+    
+    if (isInitialLoad && reset) {
+      setLoadingNotes(true);
+    } else {
+      setLoadingMore(true);
+    }
+    
     try {
-      const { data } = await axios.get('/api/notes');
-      setNotes(
-        data.map((item: any) => ({
-          ...item,
-          color: getRandomColor(),
-          createdAt: item.createdAt ? new Date(item.createdAt) : new Date(),
-        }))
-      );
+      const { data } = await axios.get<NotesResponse>(`/api/notes?page=${page}&limit=${pagination.limit}`);
+      
+      // Apply colors to notes
+      const coloredNotes = applyColors(data.notes);
+      
+      if (reset) {
+        // Replace all notes
+        setNotes(coloredNotes);
+      } else {
+        // Append to existing notes
+        setNotes(prev => [...prev, ...coloredNotes]);
+      }
+      
+      setPagination(data.pagination);
     } catch (error) {
       console.error("Error fetching notes:", error);
     } finally {
       setLoadingNotes(false);
+      setLoadingMore(false);
     }
   };
+
+  const loadMoreNotes = useCallback(() => {
+    if (pagination.hasMore && !loadingMore) {
+      fetchNotes(pagination.page + 1, false);
+    }
+  }, [pagination.hasMore, pagination.page, loadingMore]);
 
   const createNote = async (content: string) => {
     try {
       await axios.post('/api/notes', { content });
-      fetchNotes();
+      // Refetch first page to include new note
+      fetchNotes(1, true);
     } catch (error) {
       console.error("Error creating note:", error);
       throw error;
@@ -77,7 +128,12 @@ export default function NotesApp() {
   const updateNote = async (id: string, content: string) => {
     try {
       await axios.patch(`/api/notes/${id}`, { content });
-      fetchNotes();
+      // Update the note in the current state to avoid full refetch
+      setNotes(prevNotes => 
+        prevNotes.map(note => 
+          note.id === id ? { ...note, content } : note
+        )
+      );
     } catch (error) {
       console.error("Error updating note:", error);
       throw error;
@@ -87,7 +143,8 @@ export default function NotesApp() {
   const deleteNote = async (id: string) => {
     try {
       await axios.delete(`/api/notes/${id}`);
-      fetchNotes();
+      // Remove the note from current state
+      setNotes(prevNotes => prevNotes.filter(note => note.id !== id));
     } catch (error) {
       console.error("Error deleting note:", error);
     }
@@ -97,19 +154,39 @@ export default function NotesApp() {
     try {
       const note = notes.find((n) => n.id === id);
       if (note) {
-        await axios.patch(`/api/notes/${id}/pin`, { pinned: !note.pinned });
-        fetchNotes();
+        const newPinnedStatus = !note.pinned;
+        await axios.patch(`/api/notes/${id}/pin`, { pinned: newPinnedStatus });
+        
+        // Update the note in the current state
+        setNotes(prevNotes => 
+          prevNotes.map(note => 
+            note.id === id ? { ...note, pinned: newPinnedStatus } : note
+          )
+        );
       }
     } catch (error) {
       console.error("Error toggling pin status:", error);
     }
   };
 
+  // Effect for initial load
   useEffect(() => {
-    fetchNotes();
+    fetchNotes(1, true);
   }, []);
 
-  const filtered = notes.filter((n) => n.content.toLowerCase().includes(search.toLowerCase()));
+  // Effect for search - reset pagination and fetch first page
+  useEffect(() => {
+    if (search) {
+      // TODO: Implement server-side search API
+      // For now, we'll just filter client-side
+    }
+  }, [search]);
+
+  // Filter notes based on search
+  const filtered = notes.filter((n) => {
+    if (!search) return true;
+    return n.content.toLowerCase().includes(search.toLowerCase());
+  });
 
   const handleAI = async (q: string) => {
     setAiMsgs([{ sender: 'user', text: q }]);
@@ -167,14 +244,22 @@ export default function NotesApp() {
             <ViewToggle view={view} onChange={setView} />
             {filtered.length > 0 && (
               <div className="text-sm text-gray-500 dark:text-gray-400">
-                {filtered.length} {filtered.length === 1 ? 'note' : 'notes'}
+                Showing {filtered.length} of {pagination.total} {pagination.total === 1 ? 'note' : 'notes'}
                 {search && ` matching "${search}"`}
               </div>
             )}
           </div>
           
-          {/* Note List */}
-          <NoteList notes={filtered} view={view} handlers={handlers} loading={loadingNotes} />
+          {/* Note List with Infinite Scrolling */}
+          <NoteList 
+            notes={filtered} 
+            view={view} 
+            handlers={handlers} 
+            loading={loadingNotes}
+            loadingMore={loadingMore}
+            hasMore={pagination.hasMore}
+            onLoadMore={loadMoreNotes}
+          />
         </div>
       </main>
 

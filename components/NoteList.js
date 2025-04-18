@@ -3,6 +3,7 @@ import React from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import NoteCard from './NoteCard';
 import { Loader2, StickyNote } from 'lucide-react';
+import InfiniteScroll from './InfiniteScroll';
 
 function EmptyState() {
   return (
@@ -31,12 +32,12 @@ function LoadingState() {
   );
 }
 
-function NoteList({ notes, view, handlers, loading }) {
-  if (loading) {
+function NoteList({ notes, view, handlers, loading, hasMore, onLoadMore, loadingMore }) {
+  if (loading && !loadingMore) {
     return <LoadingState />;
   }
   
-  if (!notes.length) {
+  if (!notes.length && !loading) {
     return <EmptyState />;
   }
   
@@ -51,26 +52,32 @@ function NoteList({ notes, view, handlers, loading }) {
   });
 
   return (
-    <motion.div
-      layout
-      className={
-        view === 'grid'
-          ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'
-          : 'space-y-4'
-      }
+    <InfiniteScroll
+      hasMore={hasMore}
+      loadMore={onLoadMore}
+      loading={loadingMore}
     >
-      <AnimatePresence>
-        {sorted.map((note) => (
-          <NoteCard
-            key={note.id}
-            note={note}
-            onDelete={handlers.delete}
-            onEdit={handlers.edit}
-            onPin={handlers.pin}
-          />
-        ))}
-      </AnimatePresence>
-    </motion.div>
+      <motion.div
+        layout
+        className={
+          view === 'grid'
+            ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'
+            : 'space-y-4'
+        }
+      >
+        <AnimatePresence>
+          {sorted.map((note) => (
+            <NoteCard
+              key={note.id}
+              note={note}
+              onDelete={handlers.delete}
+              onEdit={handlers.edit}
+              onPin={handlers.pin}
+            />
+          ))}
+        </AnimatePresence>
+      </motion.div>
+    </InfiniteScroll>
   );
 }
 

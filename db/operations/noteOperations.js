@@ -43,15 +43,45 @@ export async function createNote(content) {
 }
 
 /**
- * Gets all notes from the database
- * @returns {Promise<Array>} - Array of notes
+ * Gets all notes from the database with pagination
+ * @param {Object} options - Pagination options
+ * @param {number} options.page - Page number (1-indexed)
+ * @param {number} options.limit - Number of items per page
+ * @param {Object} options.sort - Sort options (e.g., { createdAt: -1 })
+ * @returns {Promise<Object>} - Object containing notes array and pagination metadata
  */
-export async function getAllNotes() {
+export async function getAllNotes({ page = 1, limit = 20, sort = { createdAt: -1 } } = {}) {
   const db = await getDb();
   const collection = db.collection(NOTES_COLLECTION);
   
-  const notes = await collection.find().toArray();
-  return notes.map(mapNoteToResponse);
+  // Calculate skip value (how many documents to skip)
+  const skip = (page - 1) * limit;
+  
+  // Get total count for pagination metadata
+  const total = await collection.countDocuments();
+  
+  // Get notes with pagination
+  const notes = await collection
+    .find()
+    .sort(sort)
+    .skip(skip)
+    .limit(limit)
+    .toArray();
+  
+  // Calculate pagination metadata
+  const totalPages = Math.ceil(total / limit);
+  const hasMore = page < totalPages;
+  
+  return {
+    notes: notes.map(mapNoteToResponse),
+    pagination: {
+      total,
+      page,
+      limit,
+      totalPages,
+      hasMore
+    }
+  };
 }
 
 /**
