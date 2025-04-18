@@ -74,7 +74,7 @@ function SearchBar({ onSearch, onAIQuery }) {
           className={`w-full py-3 pl-12 pr-10 outline-none rounded-l-full transition-colors bg-white dark:bg-gray-800 ${borderStyle} border-r-0 ${
             aiMode ? 'text-purple-700 dark:text-purple-400' : 'text-gray-800 dark:text-gray-200'
           }`}
-          placeholder={aiMode ? "Ask AI about your notes..." : "Search notes..."}
+          placeholder={aiMode ? "Ask Recall about your notes..." : "Search your memories..."}
           value={query}
           onChange={handleChange}
           onKeyDown={handleKey}

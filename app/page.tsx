@@ -299,10 +299,10 @@ export default function NotesApp() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-semibold text-gray-800 dark:text-white">AI-Powered Notes</h1>
+              <h1 className="text-xl font-semibold text-gray-800 dark:text-white">Recall</h1>
               <div className="inline-flex items-center px-2 py-1 rounded-full bg-purple-100 dark:bg-purple-900">
                 <Sparkles size={14} className="text-purple-500 dark:text-purple-400 mr-1" />
-                <span className="text-xs font-medium text-purple-800 dark:text-purple-300">AI Search</span>
+                <span className="text-xs font-medium text-purple-800 dark:text-purple-300">Chat with your notes</span>
               </div>
             </div>
             

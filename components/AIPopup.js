@@ -21,7 +21,7 @@ function AIPopup({ messages, onClose, loading }) {
             <div className="flex justify-between items-center mb-4 sticky top-0 bg-white dark:bg-gray-900 py-2">
               <h3 className="text-lg font-semibold flex items-center gap-2 text-purple-700 dark:text-purple-400">
                 <MessageSquare size={20} className="text-purple-500 dark:text-purple-400" />
-                AI Assistant
+                Recall Assistant
               </h3>
               <button
                 onClick={onClose}

@@ -62,7 +62,7 @@ function NoteInput({ onSave }) {
         autoFocus
         rows={4}
         className="w-full resize-none outline-none bg-transparent placeholder-gray-400 dark:placeholder-gray-600 text-gray-800 dark:text-gray-200 mb-3"
-        placeholder="What's on your mind?"
+        placeholder="Capture a thought to recall later..."
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={handleKeyDown}
