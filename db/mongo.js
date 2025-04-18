@@ -1,13 +1,10 @@
-import { MongoClient, ServerApiVersion } from 'mongodb';
+import { MongoClient } from 'mongodb';
 
 const uri = process.env.MONGO_DB_URI;
 
 const client = new MongoClient(uri, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
-  }
+  tls: true,
+  tlsAllowInvalidCertificates: true, // only if necessary!
 });
 
 let db;

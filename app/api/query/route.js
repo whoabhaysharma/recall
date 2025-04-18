@@ -7,23 +7,25 @@ import { ObjectId } from "mongodb";
 
 export async function POST(req) {
   try {
-    const body = await req.json();
-    const queryText = body?.q; // Use optional chaining for safety
+    // Extract query text from the request body
+    const requestBody = await req.json();
+    const queryText = requestBody?.q;
 
+    // Validate query text
     if (!queryText || typeof queryText !== "string") {
-      return NextResponse.json({ error: "Missing or invalid 'q' in body" }, { status: 400 });
+      return NextResponse.json({ message: "Missing or invalid 'q' in request body" }, { status: 400 });
     }
 
-    // Step 1: Generate vector from query
+    // Step 1: Generate vector embeddings from the query text
     let vector;
     try {
       vector = await generateEmbeddings(queryText);
       if (!Array.isArray(vector) || vector.length === 0) {
-        return NextResponse.json({ error: "Failed to generate embedding" }, { status: 500 });
+        return NextResponse.json({ message: "Failed to generate embeddings" }, { status: 500 });
       }
     } catch (error) {
       console.error("Error generating embeddings:", error);
-      return NextResponse.json({ error: "Failed to generate embedding" }, { status: 500 });
+      return NextResponse.json({ message: "Failed to generate embeddings" }, { status: 500 });
     }
 
     // Step 2: Search in Pinecone
@@ -68,13 +70,23 @@ export async function POST(req) {
       .map((doc, i) => `Note ${i + 1}: ${doc.content}. Score: ${doc.score}`)
       .join("\n\n");
 
-    const prompt = `You're having a casual conversation with me. I’ll ask you a question, and I’ll also give you a few of my personal notes that are relevant, along with how closely each note matches the question (the score).
+    const prompt = `You're my personal AI assistant who knows all about my life from my notes. I'm going to ask you a question, and I'll also provide you with some of my personal notes that are relevant.
 
-Your job is to understand the question, read through the notes, and then reply with a natural, friendly answer—like we're chatting. Match my tone and language style. Don’t mention any documents or scores in your response. Just answer as if you already knew this stuff.
+IMPORTANT: Your response must be completely conversational, as if we're good friends having a casual chat. Never explain what you're doing or mention my notes. Don't say things like "based on your notes" or "according to what you've written."
 
-Here’s my question: "${queryText}"
+- Keep responses very brief and casual
+- Use conversational language and occasional slang if appropriate
+- Never sound academic, robotic, or like an AI
+- Respond as if you already knew this information about me
+- If asked for advice, give it directly without qualification
+- Never suggest to "check my notes" or any reference to notes existing
+- NEVER use phrases like "I can see" or "it seems" or "based on"
 
-And here are the matching notes:\n\n${context}`;
+My question: "${queryText}"
+
+My relevant notes:\n\n${context}
+
+Reply only as a friend would, in a casual, direct, and personal way. No explanations, context-setting, or caveats.`;
 
     // Step 5: Send to Gemini
     let geminiAnswer;

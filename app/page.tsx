@@ -8,19 +8,42 @@ import NoteInput from '../components/NoteInput';
 import ViewToggle from '../components/ViewToggle';
 import NoteList from '../components/NoteList';
 import AIPopup from '../components/AIPopup';
+import { MessageSquare, Sparkles } from 'lucide-react';
+
+// Types for our application
+interface Note {
+  id: string;
+  content: string;
+  pinned: boolean;
+  color: string;
+  createdAt: Date;
+}
+
+interface Message {
+  sender: 'user' | 'ai';
+  text: string;
+}
 
 // Main NotesApp
 export default function NotesApp() {
-  const [notes, setNotes] = useState([]);
+  const [notes, setNotes] = useState<Note[]>([]);
   const [view, setView] = useState('grid');
   const [search, setSearch] = useState('');
-  const [aiMsgs, setAiMsgs] = useState([]);
+  const [aiMsgs, setAiMsgs] = useState<Message[]>([]);
   const [aiLoading, setAiLoading] = useState(false);
   const [loadingNotes, setLoadingNotes] = useState(true);
 
   const getRandomColor = () => {
-    const hue = Math.floor(Math.random() * 360);
-    return `hsl(${hue}, 70%, 85%)`;
+    const colors = [
+      '#f3f4f6', // gray-100
+      '#fee2e2', // red-100
+      '#fef3c7', // amber-100
+      '#d1fae5', // emerald-100
+      '#dbeafe', // blue-100
+      '#ede9fe', // violet-100
+      '#fce7f3', // pink-100
+    ];
+    return colors[Math.floor(Math.random() * colors.length)];
   };
 
   const updateNotes = async () => {
@@ -28,28 +51,28 @@ export default function NotesApp() {
     try {
       const { data } = await axios.get('/api/notes/list');
       setNotes(
-        data.map((item) => ({
+        data.map((item: any) => ({
           id: item.id,
           content: item.content,
           pinned: item.pinned || false,
           color: getRandomColor(),
+          createdAt: item.createdAt ? new Date(item.createdAt) : new Date(),
         }))
       );
     } catch (error) {
       console.error("Error fetching notes:", error);
-      // Optionally display an error message to the user
     } finally {
       setLoadingNotes(false);
     }
   };
 
-  const saveNote = async (content) => {
+  const saveNote = async (content: string) => {
     try {
       await axios.post('/api/save', { content });
       updateNotes();
     } catch (error) {
       console.error("Error saving note:", error);
-      // Optionally display an error message to the user
+      throw error; // Let the component handle the error
     }
   };
 
@@ -59,7 +82,7 @@ export default function NotesApp() {
 
   const filtered = notes.filter((n) => n.content.toLowerCase().includes(search.toLowerCase()));
 
-  const handleAI = async (q) => {
+  const handleAI = async (q: string) => {
     setAiMsgs([{ sender: 'user', text: q }]);
     setAiLoading(true);
     try {
@@ -67,9 +90,8 @@ export default function NotesApp() {
       if (response.data && response.data.answer) {
         setAiMsgs((msgs) => [...msgs, { sender: 'ai', text: response.data.answer }]);
       } else {
-        setAiMsgs((msgs) => [...msgs, { sender: 'ai', text: "Sorry, I couldn't get a relevant answer." }]);
+        setAiMsgs((msgs) => [...msgs, { sender: 'ai', text: "Sorry, I couldn't find a relevant answer in your notes." }]);
       }
-      console.log("AI Response:", response.data); // Log the full response for debugging
     } catch (error) {
       console.error("Error fetching AI response:", error);
       setAiMsgs((msgs) => [...msgs, { sender: 'ai', text: "Sorry, I encountered an error while trying to answer." }]);
@@ -79,55 +101,81 @@ export default function NotesApp() {
   };
 
   const handlers = {
-    delete: async (id) => {
+    delete: async (id: string) => {
       try {
         await axios.post('/api/notes/delete', { id });
         updateNotes();
       } catch (error) {
         console.error("Error deleting note:", error);
-        // Optionally display an error message to the user
       }
     },
-    edit: async (id, content) => {
+    edit: async (id: string, content: string) => {
       try {
         await axios.post('/api/notes/update', { id, content });
         updateNotes();
       } catch (error) {
         console.error("Error updating note:", error);
-        // Optionally display an error message to the user
+        throw error;
       }
     },
-    pin: async (id) => {
+    pin: async (id: string) => {
       try {
         const note = notes.find((n) => n.id === id);
-        await axios.post('/api/notes/pin', { id, pinned: !note.pinned });
-        updateNotes();
+        if (note) {
+          await axios.post('/api/notes/pin', { id, pinned: !note.pinned });
+          updateNotes();
+        }
       } catch (error) {
         console.error("Error pinning note:", error);
-        // Optionally display an error message to the user
       }
     },
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 py-6 sm:py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <header className="mb-6">
-          <h1 className="text-2xl font-semibold text-gray-800 mb-2">My Notes</h1>
-          <SearchBar onSearch={setSearch} onAIQuery={handleAI} />
-        </header>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Header with AI Search Focus */}
+      <header className="bg-white dark:bg-gray-800 sticky top-0 z-10 shadow-sm">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4">
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-semibold text-gray-800 dark:text-white">AI-Powered Notes</h1>
+              <div className="inline-flex items-center px-2 py-1 rounded-full bg-purple-100 dark:bg-purple-900">
+                <Sparkles size={14} className="text-purple-500 dark:text-purple-400 mr-1" />
+                <span className="text-xs font-medium text-purple-800 dark:text-purple-300">AI Search</span>
+              </div>
+            </div>
+            
+            <div className="w-full sm:w-auto sm:flex-1 sm:max-w-xl">
+              <SearchBar onSearch={setSearch} onAIQuery={handleAI} />
+            </div>
+          </div>
+        </div>
+      </header>
 
-        {/* Main Content */}
-        <main className="space-y-6">
+      {/* Main Content */}
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
+        <div className="space-y-6">
+          {/* Note Input */}
           <NoteInput onSave={saveNote} />
-          <ViewToggle view={view} onChange={setView} />
+          
+          {/* Controls */}
+          <div className="flex flex-wrap justify-between items-center gap-3">
+            <ViewToggle view={view} onChange={setView} />
+            {filtered.length > 0 && (
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                {filtered.length} {filtered.length === 1 ? 'note' : 'notes'}
+                {search && ` matching "${search}"`}
+              </div>
+            )}
+          </div>
+          
+          {/* Note List */}
           <NoteList notes={filtered} view={view} handlers={handlers} loading={loadingNotes} />
-        </main>
+        </div>
+      </main>
 
-        {/* AI Popup */}
-        <AIPopup messages={aiMsgs} onClose={() => setAiMsgs([])} loading={aiLoading} />
-      </div>
+      {/* AI Popup */}
+      <AIPopup messages={aiMsgs} onClose={() => setAiMsgs([])} loading={aiLoading} />
     </div>
   );
 }
