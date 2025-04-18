@@ -55,14 +55,25 @@ function SearchBar({ onSearch, onAIQuery }) {
     }
   };
 
+  // Border styles based on mode
+  const borderStyle = aiMode ? 
+    "border-2 border-purple-400 dark:border-purple-600" : 
+    "border border-gray-200 dark:border-gray-700";
+
   return (
-    <div className="relative flex w-full">
-      <div className="relative flex-1 rounded-l-full overflow-hidden shadow-sm">
-        <Search className="absolute top-1/2 left-4 transform -translate-y-1/2 text-gray-400" size={18} aria-hidden="true" />
+    <div className="relative flex w-full shadow-sm overflow-hidden rounded-full">
+      <div className="flex-1 flex items-center relative">
+        <Search 
+          className="absolute left-4 text-gray-400 z-10" 
+          size={18} 
+          aria-hidden="true" 
+        />
         <input
           type="search"
           aria-label={aiMode ? "Ask AI about your notes" : "Search notes"}
-          className={`w-full pl-12 pr-10 py-3 outline-none transition-colors bg-white dark:bg-gray-800 ${aiMode ? 'border-2 border-r-0 border-purple-400 dark:border-purple-600 text-purple-700 dark:text-purple-400' : 'border border-r-0 border-gray-200 dark:border-gray-700 text-gray-800 dark:text-gray-200'}`}
+          className={`w-full py-3 pl-12 pr-10 outline-none rounded-l-full transition-colors bg-white dark:bg-gray-800 ${borderStyle} border-r-0 ${
+            aiMode ? 'text-purple-700 dark:text-purple-400' : 'text-gray-800 dark:text-gray-200'
+          }`}
           placeholder={aiMode ? "Ask AI about your notes..." : "Search notes..."}
           value={query}
           onChange={handleChange}
@@ -71,21 +82,22 @@ function SearchBar({ onSearch, onAIQuery }) {
         {query && !loading && (
           <button
             onClick={clearSearch}
-            className="absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            className="absolute right-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
             aria-label="Clear search"
           >
             ✕
           </button>
         )}
         {loading && (
-          <div className="absolute top-1/2 right-3 transform -translate-y-1/2">
+          <div className="absolute right-3">
             <Spinner size={18} />
           </div>
         )}
       </div>
+      
       <button
         onClick={toggleAiMode}
-        className={`flex items-center justify-center px-4 rounded-r-full transition-colors ${
+        className={`flex items-center justify-center px-4 rounded-r-full transition-colors ${borderStyle} border-l-0 ${
           aiMode 
             ? 'bg-purple-500 hover:bg-purple-600 text-white' 
             : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300'
