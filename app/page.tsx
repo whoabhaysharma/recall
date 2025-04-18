@@ -46,15 +46,13 @@ export default function NotesApp() {
     return colors[Math.floor(Math.random() * colors.length)];
   };
 
-  const updateNotes = async () => {
+  const fetchNotes = async () => {
     setLoadingNotes(true);
     try {
-      const { data } = await axios.get('/api/notes/list');
+      const { data } = await axios.get('/api/notes');
       setNotes(
         data.map((item: any) => ({
-          id: item.id,
-          content: item.content,
-          pinned: item.pinned || false,
+          ...item,
           color: getRandomColor(),
           createdAt: item.createdAt ? new Date(item.createdAt) : new Date(),
         }))
@@ -66,18 +64,49 @@ export default function NotesApp() {
     }
   };
 
-  const saveNote = async (content: string) => {
+  const createNote = async (content: string) => {
     try {
-      await axios.post('/api/save', { content });
-      updateNotes();
+      await axios.post('/api/notes', { content });
+      fetchNotes();
     } catch (error) {
-      console.error("Error saving note:", error);
-      throw error; // Let the component handle the error
+      console.error("Error creating note:", error);
+      throw error;
+    }
+  };
+
+  const updateNote = async (id: string, content: string) => {
+    try {
+      await axios.patch(`/api/notes/${id}`, { content });
+      fetchNotes();
+    } catch (error) {
+      console.error("Error updating note:", error);
+      throw error;
+    }
+  };
+
+  const deleteNote = async (id: string) => {
+    try {
+      await axios.delete(`/api/notes/${id}`);
+      fetchNotes();
+    } catch (error) {
+      console.error("Error deleting note:", error);
+    }
+  };
+
+  const togglePinNote = async (id: string) => {
+    try {
+      const note = notes.find((n) => n.id === id);
+      if (note) {
+        await axios.patch(`/api/notes/${id}/pin`, { pinned: !note.pinned });
+        fetchNotes();
+      }
+    } catch (error) {
+      console.error("Error toggling pin status:", error);
     }
   };
 
   useEffect(() => {
-    updateNotes();
+    fetchNotes();
   }, []);
 
   const filtered = notes.filter((n) => n.content.toLowerCase().includes(search.toLowerCase()));
@@ -101,34 +130,9 @@ export default function NotesApp() {
   };
 
   const handlers = {
-    delete: async (id: string) => {
-      try {
-        await axios.post('/api/notes/delete', { id });
-        updateNotes();
-      } catch (error) {
-        console.error("Error deleting note:", error);
-      }
-    },
-    edit: async (id: string, content: string) => {
-      try {
-        await axios.post('/api/notes/update', { id, content });
-        updateNotes();
-      } catch (error) {
-        console.error("Error updating note:", error);
-        throw error;
-      }
-    },
-    pin: async (id: string) => {
-      try {
-        const note = notes.find((n) => n.id === id);
-        if (note) {
-          await axios.post('/api/notes/pin', { id, pinned: !note.pinned });
-          updateNotes();
-        }
-      } catch (error) {
-        console.error("Error pinning note:", error);
-      }
-    },
+    delete: deleteNote,
+    edit: updateNote,
+    pin: togglePinNote,
   };
 
   return (
@@ -156,7 +160,7 @@ export default function NotesApp() {
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
         <div className="space-y-6">
           {/* Note Input */}
-          <NoteInput onSave={saveNote} />
+          <NoteInput onSave={createNote} />
           
           {/* Controls */}
           <div className="flex flex-wrap justify-between items-center gap-3">
