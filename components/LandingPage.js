@@ -46,17 +46,24 @@ export default function LandingPage() {
                 </div>
                 <div className="space-y-4">
                   <div className="bg-gray-750 rounded-lg p-4 border border-gray-700">
-                    <p className="text-gray-300">Project meeting ideas: Create user onboarding flow and improve dashboard analytics</p>
+                    <p className="text-gray-300">Dinner @ Dilli Haat with Rahul bhai: Try the momos from the Northeastern stall and that butter chicken place near the entrance. Parking scene was totally chill, hardly any bheed-bhaad after 6pm.</p>
                   </div>
                   <div className="bg-gray-750 rounded-lg p-4 border border-gray-700">
-                    <p className="text-gray-300">Book recommendation: "Atomic Habits" by James Clear - read chapter on habit stacking</p>
+                    <p className="text-gray-300">Meeting with design team: Need to finalize app ke icons by Friday. Aryan said he'll finish UI screens but usko thoda time do yaar, banda busy hai.</p>
                   </div>
                   <div className="bg-[#CD1B1B]/10 rounded-lg p-4 border border-[#CD1B1B]/20">
                     <div className="flex items-center gap-2 mb-2">
                       <MessageSquare size={16} className="text-[#CD1B1B]" />
                       <p className="text-sm font-medium text-[#CD1B1B]">Question for AI</p>
                     </div>
-                    <p className="text-gray-200">What were the key points from my last meeting?</p>
+                    <p className="text-gray-200">Yaar, where did I go for dinner with Rahul last month?</p>
+                  </div>
+                  <div className="bg-gray-750 rounded-lg p-4 border border-gray-700">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Sparkles size={16} className="text-[#CD1B1B]" />
+                      <p className="text-sm font-medium text-[#CD1B1B]">AI Answer</p>
+                    </div>
+                    <p className="text-gray-300">You had dinner with Rahul bhai at Dilli Haat. You mentioned trying momos from the Northeastern stall and a butter chicken place near the entrance. You also noted that parking wasn't crowded after 6pm.</p>
                   </div>
                 </div>
               </div>
