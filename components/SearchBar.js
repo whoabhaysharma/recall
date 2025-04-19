@@ -1,6 +1,6 @@
 // components/SearchBar.js
 import React, { useState, useCallback } from 'react';
-import { Search, Sparkles } from 'lucide-react';
+import { Search, Sparkles, X } from 'lucide-react';
 import debounce from 'lodash/debounce';
 import Spinner from './Spinner';
 
@@ -69,23 +69,25 @@ function SearchBar({ onSearch, onAIQuery }) {
           aria-hidden="true" 
         />
         <input
-          type="search"
+          type="text"
           aria-label={aiMode ? "Ask AI about your notes" : "Search notes"}
           className={`w-full py-3 pl-12 pr-10 outline-none rounded-l-full transition-colors bg-white dark:bg-gray-800 ${borderStyle} border-r-0 ${
             aiMode ? 'text-purple-700 dark:text-purple-400' : 'text-gray-800 dark:text-gray-200'
-          }`}
+          } appearance-none`}
           placeholder={aiMode ? "Ask Recall about your notes..." : "Search your memories..."}
           value={query}
           onChange={handleChange}
           onKeyDown={handleKey}
+          spellCheck="false"
         />
         {query && !loading && (
           <button
             onClick={clearSearch}
-            className="absolute right-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            className="absolute right-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
             aria-label="Clear search"
+            type="button"
           >
-            ✕
+            <X size={16} />
           </button>
         )}
         {loading && (
@@ -104,6 +106,7 @@ function SearchBar({ onSearch, onAIQuery }) {
         }`}
         aria-label={aiMode ? "Switch to regular search" : "Switch to AI search"}
         aria-pressed={aiMode}
+        type="button"
       >
         <Sparkles size={18} className={aiMode ? 'text-white' : 'text-gray-500 dark:text-gray-400'} />
       </button>
