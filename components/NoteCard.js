@@ -65,7 +65,7 @@ function NoteCard({ note, onDelete, onEdit, onPin }) {
         opacity: isDeleting ? 0.6 : 1, 
         y: 0,
         boxShadow: isProcessing ? 
-          ['0 1px 3px rgba(0,0,0,0.12)', '0 4px 6px rgba(59,130,246,0.5)', '0 1px 3px rgba(0,0,0,0.12)'] : 
+          ['0 1px 3px rgba(0,0,0,0.12)', '0 4px 6px rgba(205,27,27,0.5)', '0 1px 3px rgba(0,0,0,0.12)'] : 
           undefined
       }}
       exit={{ opacity: 0, scale: 0.95 }}
@@ -79,7 +79,7 @@ function NoteCard({ note, onDelete, onEdit, onPin }) {
       }}
       style={{ 
         backgroundColor: hasError ? '#fee2e2' : note.color,
-        border: isProcessing ? '1px solid rgba(59,130,246,0.5)' : undefined,
+        border: isProcessing ? '1px solid rgba(205,27,27,0.5)' : undefined,
         borderColor: hasError ? '#ef4444' : undefined,
         borderWidth: (isProcessing || hasError) ? '1px' : undefined,
         opacity: isDeleting ? 0.6 : 1
@@ -90,14 +90,14 @@ function NoteCard({ note, onDelete, onEdit, onPin }) {
       {/* Loading overlay for delete */}
       {isDeleting && (
         <div className="absolute inset-0 bg-gray-100/50 dark:bg-gray-800/50 rounded-xl z-30 flex items-center justify-center">
-          <Loader size={24} className="text-red-500 animate-spin" />
+          <Loader size={24} className="text-[#CD1B1B] animate-spin" />
         </div>
       )}
       
       {/* Optimistic indicator */}
       {isProcessing && (
         <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center bg-black/5 bg-opacity-40 rounded-xl z-20 pointer-events-none">
-          <div className="absolute top-2 left-2 bg-blue-100 text-blue-800 text-xs py-1 px-2 rounded-full flex items-center">
+          <div className="absolute top-2 left-2 bg-[#CD1B1B]/10 text-[#CD1B1B] text-xs py-1 px-2 rounded-full flex items-center">
             <Loader size={12} className="mr-1 animate-spin" />
             <span>Saving...</span>
           </div>
@@ -120,8 +120,8 @@ function NoteCard({ note, onDelete, onEdit, onPin }) {
             exit={{ scale: 0.8, opacity: 0 }}
             className="absolute top-0 right-0 z-10"
           >
-            <div className="w-8 h-8 bg-yellow-400 rounded-bl-xl flex items-center justify-center shadow-sm">
-              <Pin size={14} className="text-yellow-700 transform -rotate-45" />
+            <div className="w-8 h-8 bg-[#CD1B1B] rounded-bl-xl flex items-center justify-center shadow-sm">
+              <Pin size={14} className="text-white transform -rotate-45" />
             </div>
           </motion.div>
         )}
@@ -139,15 +139,15 @@ function NoteCard({ note, onDelete, onEdit, onPin }) {
             disabled={isPinning || isDeleting}
             className={`p-2 rounded-full ${
               note.pinned 
-                ? 'text-yellow-600 hover:bg-yellow-100' 
+                ? 'text-[#CD1B1B] hover:bg-[#CD1B1B]/10' 
                 : 'text-gray-400 hover:bg-gray-100 hover:text-gray-700'
             } transition-colors relative`}
             aria-label={note.pinned ? 'Unpin note' : 'Pin note'}
           >
-            <Pin size={16} className={note.pinned ? 'text-yellow-500' : ''} />
+            <Pin size={16} className={note.pinned ? 'text-[#CD1B1B]' : ''} />
             {isPinning && (
               <span className="absolute inset-0 flex items-center justify-center">
-                <Loader size={16} className="animate-spin text-blue-500" />
+                <Loader size={16} className="animate-spin text-[#CD1B1B]" />
               </span>
             )}
           </button>
@@ -171,7 +171,7 @@ function NoteCard({ note, onDelete, onEdit, onPin }) {
         {editing ? (
           <div onClick={(e) => e.stopPropagation()} className="mt-2">
             <textarea
-              className="w-full min-h-[120px] resize-none bg-transparent outline-none text-gray-800 focus:ring-2 focus:ring-blue-300 rounded p-1"
+              className="w-full min-h-[120px] resize-none bg-transparent outline-none text-gray-800 focus:ring-2 focus:ring-[#CD1B1B]/50 rounded p-1"
               value={text}
               onChange={(e) => setText(e.target.value)}
               autoFocus
@@ -192,7 +192,7 @@ function NoteCard({ note, onDelete, onEdit, onPin }) {
               <button
                 onClick={handleSave}
                 disabled={isSaving || text.trim() === note.content || text.trim() === ''}
-                className="px-3 py-1.5 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition-colors text-sm font-medium disabled:opacity-50 flex items-center gap-1"
+                className="px-3 py-1.5 rounded-lg bg-[#CD1B1B] text-white hover:bg-[#B01616] transition-colors text-sm font-medium disabled:opacity-50 flex items-center gap-1"
                 aria-label="Save note"
               >
                 {isSaving ? (

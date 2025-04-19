@@ -57,7 +57,7 @@ function SearchBar({ onSearch, onAIQuery }) {
 
   // Border styles based on mode
   const borderStyle = aiMode ? 
-    "border-2 border-purple-400 dark:border-purple-600" : 
+    "border-2 border-[#CD1B1B] dark:border-[#CD1B1B]" : 
     "border border-gray-200 dark:border-gray-700";
 
   return (
@@ -72,7 +72,7 @@ function SearchBar({ onSearch, onAIQuery }) {
           type="text"
           aria-label={aiMode ? "Ask AI about your notes" : "Search notes"}
           className={`w-full py-3 pl-12 pr-10 outline-none rounded-l-full transition-colors bg-white dark:bg-gray-800 ${borderStyle} border-r-0 ${
-            aiMode ? 'text-purple-700 dark:text-purple-400' : 'text-gray-800 dark:text-gray-200'
+            aiMode ? 'text-[#CD1B1B] dark:text-[#CD1B1B]' : 'text-gray-800 dark:text-gray-200'
           } appearance-none`}
           placeholder={aiMode ? "Ask Recall about your notes..." : "Search your memories..."}
           value={query}
@@ -101,7 +101,7 @@ function SearchBar({ onSearch, onAIQuery }) {
         onClick={toggleAiMode}
         className={`flex items-center justify-center px-4 rounded-r-full transition-colors ${borderStyle} border-l-0 ${
           aiMode 
-            ? 'bg-purple-500 hover:bg-purple-600 text-white' 
+            ? 'bg-[#CD1B1B] hover:bg-red-700 text-white' 
             : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300'
         }`}
         aria-label={aiMode ? "Switch to regular search" : "Switch to AI search"}

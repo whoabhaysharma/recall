@@ -11,7 +11,7 @@ function ViewToggle({ view, onChange }) {
         aria-label="List view"
         className={`px-4 py-2 flex items-center gap-2 transition-colors ${
           view === 'list' 
-            ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' 
+            ? 'bg-[#CD1B1B]/10 dark:bg-[#CD1B1B]/20 text-[#CD1B1B] dark:text-[#CD1B1B]' 
             : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
         }`}
       >
@@ -24,7 +24,7 @@ function ViewToggle({ view, onChange }) {
         aria-label="Grid view"
         className={`px-4 py-2 flex items-center gap-2 transition-colors ${
           view === 'grid' 
-            ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' 
+            ? 'bg-[#CD1B1B]/10 dark:bg-[#CD1B1B]/20 text-[#CD1B1B] dark:text-[#CD1B1B]' 
             : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
         }`}
       >

@@ -19,8 +19,8 @@ function AIPopup({ messages, onClose, loading }) {
         >
           <div className="max-w-3xl mx-auto">
             <div className="flex justify-between items-center mb-4 sticky top-0 bg-white dark:bg-gray-900 py-2">
-              <h3 className="text-lg font-semibold flex items-center gap-2 text-purple-700 dark:text-purple-400">
-                <MessageSquare size={20} className="text-purple-500 dark:text-purple-400" />
+              <h3 className="text-lg font-semibold flex items-center gap-2 text-[#CD1B1B] dark:text-[#CD1B1B]">
+                <MessageSquare size={20} className="text-[#CD1B1B] dark:text-[#CD1B1B]" />
                 Recall Assistant
               </h3>
               <button
@@ -42,7 +42,7 @@ function AIPopup({ messages, onClose, loading }) {
                   className={`flex gap-3 ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   {m.sender === 'ai' && (
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-purple-100 dark:bg-purple-900 flex items-center justify-center text-purple-600 dark:text-purple-400">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[#CD1B1B]/10 dark:bg-[#CD1B1B]/20 flex items-center justify-center text-[#CD1B1B] dark:text-[#CD1B1B]">
                       <MessageSquare size={16} />
                     </div>
                   )}
@@ -50,7 +50,7 @@ function AIPopup({ messages, onClose, loading }) {
                   <div 
                     className={`max-w-[80%] p-3 rounded-2xl ${
                       m.sender === 'user' 
-                        ? 'bg-blue-500 text-white ml-auto rounded-tr-sm' 
+                        ? 'bg-[#CD1B1B] text-white ml-auto rounded-tr-sm' 
                         : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-tl-sm'
                     }`}
                   >
@@ -58,7 +58,7 @@ function AIPopup({ messages, onClose, loading }) {
                   </div>
                   
                   {m.sender === 'user' && (
-                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-blue-600 dark:text-blue-400">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-600 dark:text-gray-400">
                       <User size={16} />
                     </div>
                   )}
