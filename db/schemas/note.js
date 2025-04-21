@@ -25,17 +25,24 @@ export function validateNote(note) {
     return { isValid: false, error: "Pinned status must be a boolean" };
   }
   
+  // Validate userId if it exists
+  if (note.userId !== undefined && typeof note.userId !== "string") {
+    return { isValid: false, error: "User ID must be a string" };
+  }
+  
   return { isValid: true };
 }
 
 /**
  * Creates a new note object with default values
  * @param {string} content - The content of the note
+ * @param {string} userId - The ID of the user creating the note
  * @returns {Object} - A new note object with default values
  */
-export function createNoteObject(content) {
+export function createNoteObject(content, userId) {
   return {
     content: content.trim(),
+    userId: userId,
     pinned: false,
     createdAt: new Date(),
     updatedAt: new Date()
@@ -51,6 +58,7 @@ export function mapNoteToResponse(dbNote) {
   return {
     id: dbNote._id.toString(),
     content: dbNote.content,
+    userId: dbNote.userId,
     pinned: dbNote.pinned || false,
     createdAt: dbNote.createdAt,
     updatedAt: dbNote.updatedAt

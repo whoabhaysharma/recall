@@ -4,9 +4,45 @@ import { generateEmbeddings, queryGeminiFlash } from "../../../services/Ai";
 import { index } from "../../../db/pinecone";
 import { getDb } from "../../../db/mongo";
 import { ObjectId } from "mongodb";
+import { getAuth } from "firebase-admin/auth";
+import { cookies } from "next/headers";
+import { initializeAdminApp } from "../../../firebase/admin";
+
+// Initialize Firebase Admin
+const firebaseAdmin = initializeAdminApp();
+
+/**
+ * Helper function to get the current user ID from the session token
+ * @returns {Promise<string|null>} - The user ID or null if not authenticated
+ */
+async function getCurrentUserId() {
+  try {
+    // Get the session token from cookies
+    const cookieStore = await cookies();
+    const sessionCookie = cookieStore.get('session')?.value;
+    
+    if (!sessionCookie) {
+      return null;
+    }
+    
+    // Verify the session cookie and get the user ID
+    const decodedClaims = await getAuth(firebaseAdmin).verifySessionCookie(sessionCookie);
+    return decodedClaims.uid;
+  } catch (error) {
+    console.error("Error getting current user:", error);
+    return null;
+  }
+}
 
 export async function POST(req) {
   try {
+    // Get the current user ID
+    const userId = await getCurrentUserId();
+    
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    
     // Extract query text from the request body
     const requestBody = await req.json();
     const queryText = requestBody?.q;
@@ -28,7 +64,7 @@ export async function POST(req) {
       return NextResponse.json({ message: "Failed to generate embeddings" }, { status: 500 });
     }
 
-    // Step 2: Search in Pinecone
+    // Step 2: Search in Pinecone with user ID filter
     let results;
     try {
       results = await index.query({
@@ -36,13 +72,14 @@ export async function POST(req) {
         vector,
         includeMetadata: true,
         includeValues: false,
+        filter: { userId: userId }, // Filter by user ID in Pinecone
       });
     } catch (error) {
       console.error("Error querying Pinecone:", error);
       return NextResponse.json({ error: "Error querying Pinecone" }, { status: 500 });
     }
 
-    // Step 3: Fetch related MongoDB documents
+    // Step 3: Fetch related MongoDB documents for the current user
     let documents;
     try {
       const ids = results?.matches?.map((match) => match.id) || [];
@@ -50,7 +87,10 @@ export async function POST(req) {
       const collection = db.collection("notes");
 
       documents = await collection
-        .find({ _id: { $in: ids.map((id) => new ObjectId(id)) } })
+        .find({ 
+          _id: { $in: ids.map((id) => new ObjectId(id)) },
+          userId: userId // Ensure only this user's notes are returned
+        })
         .toArray();
     } catch (error) {
       console.error("Error fetching MongoDB documents:", error);

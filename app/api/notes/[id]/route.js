@@ -5,6 +5,35 @@
 import { NextResponse } from "next/server";
 import { getNoteById, updateNote, deleteNote } from "../../../../db/operations/noteOperations";
 import { validateNote } from "../../../../db/schemas/note";
+import { getAuth } from "firebase-admin/auth";
+import { cookies } from "next/headers";
+import { initializeAdminApp } from "../../../../firebase/admin";
+
+// Initialize Firebase Admin
+const firebaseAdmin = initializeAdminApp();
+
+/**
+ * Helper function to get the current user ID from the session token
+ * @returns {Promise<string|null>} - The user ID or null if not authenticated
+ */
+async function getCurrentUserId() {
+  try {
+    // Get the session token from cookies
+    const cookieStore = await cookies();
+    const sessionCookie = cookieStore.get('session')?.value;
+    
+    if (!sessionCookie) {
+      return null;
+    }
+    
+    // Verify the session cookie and get the user ID
+    const decodedClaims = await getAuth(firebaseAdmin).verifySessionCookie(sessionCookie);
+    return decodedClaims.uid;
+  } catch (error) {
+    console.error("Error getting current user:", error);
+    return null;
+  }
+}
 
 /**
  * GET /api/notes/[id] - Get a specific note by ID
@@ -20,7 +49,17 @@ export async function GET(request, { params }) {
       );
     }
     
-    const note = await getNoteById(id);
+    // Get the current user ID
+    const userId = await getCurrentUserId();
+    
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+    
+    const note = await getNoteById(id, userId);
     
     if (!note) {
       return NextResponse.json(
@@ -54,8 +93,18 @@ export async function PATCH(request, { params }) {
       );
     }
     
-    // Check if note exists
-    const existingNote = await getNoteById(id);
+    // Get the current user ID
+    const userId = await getCurrentUserId();
+    
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+    
+    // Check if note exists and belongs to the user
+    const existingNote = await getNoteById(id, userId);
     if (!existingNote) {
       return NextResponse.json(
         { error: "Note not found" },
@@ -75,7 +124,7 @@ export async function PATCH(request, { params }) {
     }
     
     // Update note
-    const updatedNote = await updateNote(id, body);
+    const updatedNote = await updateNote(id, userId, body);
     
     return NextResponse.json({
       message: "Note updated successfully",
@@ -104,7 +153,17 @@ export async function DELETE(request, { params }) {
       );
     }
     
-    const success = await deleteNote(id);
+    // Get the current user ID
+    const userId = await getCurrentUserId();
+    
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+    
+    const success = await deleteNote(id, userId);
     
     if (!success) {
       return NextResponse.json(

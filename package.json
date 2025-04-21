@@ -13,6 +13,7 @@
     "@pinecone-database/pinecone": "^5.1.1",
     "axios": "^1.8.4",
     "firebase": "^11.6.0",
+    "firebase-admin": "^13.2.0",
     "framer-motion": "^12.7.3",
     "lodash": "^4.17.21",
     "lucide-react": "^0.488.0",
