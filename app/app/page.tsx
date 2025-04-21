@@ -81,7 +81,7 @@ export default function AppDashboard() {
     }));
   };
 
-  const fetchNotes = async (page = 1, reset = true) => {
+  const fetchNotes = async (page = 1, reset = true, retryCount = 0) => {
     const isInitialLoad = page === 1;
     
     if (isInitialLoad && reset) {
@@ -110,9 +110,26 @@ export default function AppDashboard() {
       }
       
       setPagination(data.pagination);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error fetching notes:", error);
+      
+      // Check if this is an authentication error (401)
+      if (error?.response?.status === 401 && retryCount < 3) {
+        console.log(`Authentication not ready yet, retrying (${retryCount + 1}/3)...`);
+        
+        // Wait a bit longer with each retry
+        const delay = (retryCount + 1) * 700;
+        
+        // Retry the request after a delay
+        setTimeout(() => {
+          fetchNotes(page, reset, retryCount + 1);
+        }, delay);
+        
+        // Don't clear loading state when we're going to retry
+        return;
+      }
     } finally {
+      // Only clear loading state if we're not retrying
       setLoadingNotes(false);
       setLoadingMore(false);
     }

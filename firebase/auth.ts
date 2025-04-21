@@ -85,6 +85,9 @@ async function createSession(user: User) {
       throw new Error('Failed to create session');
     }
     
+    // Add a small delay to ensure the cookie is fully registered before other API calls
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
     return true;
   } catch (error) {
     console.error('Error creating session:', error);

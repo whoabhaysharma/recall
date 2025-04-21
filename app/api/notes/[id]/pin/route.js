@@ -21,12 +21,28 @@ async function getCurrentUserId() {
     const sessionCookie = cookieStore.get('session')?.value;
     
     if (!sessionCookie) {
+      console.log("No session cookie found");
       return null;
     }
     
-    // Verify the session cookie and get the user ID
-    const decodedClaims = await getAuth(firebaseAdmin).verifySessionCookie(sessionCookie);
-    return decodedClaims.uid;
+    try {
+      // Verify the session cookie and get the user ID
+      const decodedClaims = await getAuth(firebaseAdmin).verifySessionCookie(
+        sessionCookie, 
+        // Set checkRevoked to true to check if the session has been revoked
+        true
+      );
+      
+      if (!decodedClaims || !decodedClaims.uid) {
+        console.error("Session cookie verification failed: Invalid claims");
+        return null;
+      }
+      
+      return decodedClaims.uid;
+    } catch (verifyError) {
+      console.error("Session cookie verification error:", verifyError.message);
+      return null;
+    }
   } catch (error) {
     console.error("Error getting current user:", error);
     return null;

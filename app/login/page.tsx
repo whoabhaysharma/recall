@@ -22,24 +22,35 @@ export default function LoginPage() {
     setError(null);
     setVerificationWarning(null);
     
-    const { user, error } = await signInWithEmail(email, password);
-    
-    if (error) {
-      setError(error);
-      setIsLoading(false);
-      return;
-    }
-    
-    if (user) {
-      // Check if email is verified
-      if (!user.emailVerified) {
-        setVerificationWarning("Your email address hasn't been verified. Please check your inbox or click below to resend the verification email.");
+    try {
+      const { user, error } = await signInWithEmail(email, password);
+      
+      if (error) {
+        // Handle verification error specifically
+        if (error.includes('email-not-verified') || error.includes('not verified')) {
+          setVerificationWarning("Your email is not verified. Please check your inbox and verify your email before logging in.");
+          setIsLoading(false);
+          return;
+        }
+        
+        setError(error);
         setIsLoading(false);
         return;
       }
       
-      // Redirect to app dashboard
-      router.push('/app');
+      if (user) {
+        // Small delay before redirecting to ensure cookie is set
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Redirect to app dashboard
+        router.push('/app');
+      } else {
+        setIsLoading(false);
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      setError("An unexpected error occurred during login");
+      setIsLoading(false);
     }
   };
 
@@ -47,17 +58,28 @@ export default function LoginPage() {
     setIsLoading(true);
     setError(null);
     
-    const { user, error } = await signInWithGoogle();
-    
-    if (error) {
-      setError(error);
+    try {
+      const { user, error } = await signInWithGoogle();
+      
+      if (error) {
+        setError(error);
+        setIsLoading(false);
+        return;
+      }
+      
+      if (user) {
+        // Small delay before redirecting to ensure cookie is set
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Redirect to app dashboard
+        router.push('/app');
+      } else {
+        setIsLoading(false);
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      setError("An unexpected error occurred during login");
       setIsLoading(false);
-      return;
-    }
-    
-    if (user) {
-      // Redirect to app dashboard
-      router.push('/app');
     }
   };
 
