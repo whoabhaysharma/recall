@@ -6,6 +6,8 @@ import {
   signInWithPopup,
   updateProfile,
   onAuthStateChanged,
+  sendEmailVerification,
+  sendPasswordResetEmail,
   User
 } from 'firebase/auth';
 import { auth } from './config';
@@ -19,6 +21,9 @@ export const signUpWithEmail = async (email: string, password: string, name: str
       await updateProfile(userCredential.user, {
         displayName: name
       });
+      
+      // Send verification email
+      await sendEmailVerification(userCredential.user);
     }
     return { user: userCredential.user, error: null };
   } catch (error: any) {
@@ -44,6 +49,26 @@ export const signInWithGoogle = async () => {
     return { user: userCredential.user, error: null };
   } catch (error: any) {
     return { user: null, error: error.message || 'An error occurred during Google sign in' };
+  }
+};
+
+// Send password reset email
+export const resetPassword = async (email: string) => {
+  try {
+    await sendPasswordResetEmail(auth, email);
+    return { error: null, success: true };
+  } catch (error: any) {
+    return { error: error.message || 'An error occurred while sending password reset email', success: false };
+  }
+};
+
+// Resend verification email
+export const resendVerificationEmail = async (user: User) => {
+  try {
+    await sendEmailVerification(user);
+    return { error: null, success: true };
+  } catch (error: any) {
+    return { error: error.message || 'An error occurred while sending verification email', success: false };
   }
 };
 

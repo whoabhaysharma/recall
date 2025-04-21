@@ -2,21 +2,25 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Lock, Mail, ArrowRight, AlertCircle } from 'lucide-react';
+import { Lock, Mail, ArrowRight, AlertCircle, Info } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { signInWithEmail, signInWithGoogle } from '../../firebase/auth';
+import { signInWithEmail, signInWithGoogle, resendVerificationEmail } from '../../firebase/auth';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [verificationWarning, setVerificationWarning] = useState<string | null>(null);
+  const [resendingEmail, setResendingEmail] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+    setVerificationWarning(null);
     
     const { user, error } = await signInWithEmail(email, password);
     
@@ -27,6 +31,13 @@ export default function LoginPage() {
     }
     
     if (user) {
+      // Check if email is verified
+      if (!user.emailVerified) {
+        setVerificationWarning("Your email address hasn't been verified. Please check your inbox or click below to resend the verification email.");
+        setIsLoading(false);
+        return;
+      }
+      
       // Redirect to app dashboard
       router.push('/app');
     }
@@ -50,6 +61,39 @@ export default function LoginPage() {
     }
   };
 
+  const handleResendVerification = async () => {
+    if (!email || !password) {
+      setError("Please enter your email and password to resend the verification email");
+      return;
+    }
+    
+    setResendingEmail(true);
+    setResendSuccess(false);
+    
+    // First login to get the user object
+    const { user, error } = await signInWithEmail(email, password);
+    
+    if (error) {
+      setError(error);
+      setResendingEmail(false);
+      return;
+    }
+    
+    if (user) {
+      // Resend verification email
+      const { success, error } = await resendVerificationEmail(user);
+      
+      if (error) {
+        setError(error);
+      } else if (success) {
+        setResendSuccess(true);
+        setVerificationWarning("Verification email has been resent. Please check your inbox.");
+      }
+      
+      setResendingEmail(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col justify-center items-center bg-gray-950 text-gray-200 px-4 py-12">
       <div className="w-full max-w-md">
@@ -68,6 +112,22 @@ export default function LoginPage() {
             <div className="mb-6 bg-red-900/30 border border-red-800 text-red-200 px-4 py-3 rounded-lg flex items-start">
               <AlertCircle size={20} className="mr-2 mt-0.5 flex-shrink-0" />
               <p>{error}</p>
+            </div>
+          )}
+
+          {verificationWarning && (
+            <div className={`mb-6 ${resendSuccess ? 'bg-green-900/30 border-green-800 text-green-200' : 'bg-yellow-900/30 border-yellow-800 text-yellow-200'} px-4 py-3 rounded-lg flex flex-col`}>
+              <div className="flex items-start mb-2">
+                <Info size={20} className="mr-2 mt-0.5 flex-shrink-0" />
+                <p>{verificationWarning}</p>
+              </div>
+              <button
+                onClick={handleResendVerification}
+                disabled={resendingEmail || resendSuccess}
+                className="self-end text-sm font-medium underline hover:text-white transition-colors"
+              >
+                {resendingEmail ? 'Sending...' : resendSuccess ? 'Email sent!' : 'Resend verification email'}
+              </button>
             </div>
           )}
           
@@ -165,9 +225,9 @@ export default function LoginPage() {
                 </label>
               </div>
               <div className="text-sm">
-                <a href="#" className="font-medium text-[#CD1B1B] hover:text-red-500">
+                <Link href="/forgot-password" className="font-medium text-[#CD1B1B] hover:text-red-500">
                   Forgot password?
-                </a>
+                </Link>
               </div>
             </div>
 

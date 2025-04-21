@@ -75,12 +75,28 @@ This application uses Firebase for authentication. Follow these steps to set up 
    npm run dev
    ```
 
-## Authentication Flow
+## Authentication Features
 
 The application implements the following authentication features:
 
 - **Sign Up**: Users can create an account with email and password
 - **Login**: Users can sign in with their email and password
 - **Google Authentication**: Users can sign up or login with their Google account
+- **Email Verification**: Email verification is required for accounts created with email/password
+- **Password Reset**: Users can reset their password through a recovery email
 - **Protected Routes**: The `/app` routes are protected and require authentication
 - **Authentication State**: The app maintains authentication state across the application
+
+### Email Verification Process
+
+1. When a user signs up using email/password, a verification email is sent automatically
+2. The user needs to click the verification link in their email to verify their address
+3. If the email is not received, users can request a new verification email from the login page
+4. Users with unverified emails will see a verification banner in the app
+
+### Password Reset Process
+
+1. Users can access the forgot password page from the login page
+2. After entering their email address, a password reset link is sent to their email
+3. Clicking the link in the email will open a page where they can set a new password
+4. After resetting their password, users can log in with the new credentials

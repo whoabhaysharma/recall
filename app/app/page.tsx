@@ -309,8 +309,24 @@ export default function AppDashboard() {
     pin: togglePinNote,
   };
 
+  // Check if user's email is verified
+  const isUserEmailVerified = user?.emailVerified || user?.providerData[0]?.providerId === 'google.com';
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      {/* Email verification banner */}
+      {!isUserEmailVerified && (
+        <div className="bg-yellow-600 dark:bg-yellow-700 py-2">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center text-white text-sm">
+            <span className="font-semibold">Your email is not verified.</span> Please check your inbox for a verification link or{' '}
+            <Link href="/login" className="underline font-medium hover:text-yellow-100">
+              click here
+            </Link>{' '}
+            to resend the verification email.
+          </div>
+        </div>
+      )}
+
       {/* Header with user information and logout */}
       <header className="bg-white dark:bg-gray-800 sticky top-0 z-10 shadow-sm">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4">
