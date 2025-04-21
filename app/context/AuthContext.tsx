@@ -2,8 +2,9 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User } from 'firebase/auth';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { getCurrentUser, listenToAuthChanges, signOut } from '../../firebase/auth';
+import axios from 'axios';
 
 interface AuthContextType {
   user: User | null;
@@ -26,53 +27,61 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [emailVerified, setEmailVerified] = useState(false);
   const router = useRouter();
-  const pathname = usePathname();
+
+  // Verify the session token on the server side
+  const verifySession = async () => {
+    try {
+      const response = await axios.get('/api/auth/verify');
+      return response.data.authenticated;
+    } catch (error) {
+      console.error('Session verification failed:', error);
+      return false;
+    }
+  };
 
   useEffect(() => {
-    // Check if user is already logged in
-    const currentUser = getCurrentUser();
-    if (currentUser) {
-      setUser(currentUser);
-      setEmailVerified(currentUser.emailVerified);
-    }
+    const initAuth = async () => {
+      // Check if user is already logged in locally
+      const currentUser = getCurrentUser();
+      
+      if (currentUser) {
+        setUser(currentUser);
+        setEmailVerified(currentUser.emailVerified);
+        
+        // Verify the session is also valid on the server
+        const isSessionValid = await verifySession();
+        
+        // If the session is invalid but we have a local user,
+        // it means the session has expired on the server
+        if (!isSessionValid) {
+          console.log('Session expired, logging out');
+          await signOut();
+          setUser(null);
+        }
+      }
 
-    // Listen for auth state changes
-    const unsubscribe = listenToAuthChanges((user) => {
-      setUser(user);
-      setEmailVerified(user?.emailVerified || false);
+      // Listen for auth state changes
+      const unsubscribe = listenToAuthChanges((user) => {
+        setUser(user);
+        setEmailVerified(user?.emailVerified || false);
+        setIsLoading(false);
+      });
+
       setIsLoading(false);
-    });
+      return unsubscribe;
+    };
 
-    return () => unsubscribe();
+    initAuth();
   }, []);
 
-  // Redirect based on authentication status
-  useEffect(() => {
-    if (!isLoading) {
-      const isAuthPage = pathname === '/login' || pathname === '/signup' || pathname === '/forgot-password';
-      
-      // Allow access to forgot-password page regardless of auth status
-      if (pathname === '/forgot-password') {
-        return;
-      }
-      
-      if (!user && pathname.startsWith('/app')) {
-        // If not logged in and trying to access protected route
-        router.push('/login');
-      } else if (user && isAuthPage) {
-        // If signed in with Google or verified email, redirect to app
-        if (user.providerData[0]?.providerId === 'google.com' || user.emailVerified) {
-          router.push('/app');
-        }
-        // If email not verified, let them stay on login page to see verification warning
-      }
-    }
-  }, [user, isLoading, pathname, router, emailVerified]);
+  // The middleware will handle redirects at the server level,
+  // preventing any flash of unauthorized content.
 
   const logout = async () => {
     try {
       await signOut();
-      router.push('/login');
+      // Let middleware handle redirection after logout
+      window.location.href = '/login';
     } catch (error) {
       console.error('Error signing out:', error);
     }
