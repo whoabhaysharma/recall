@@ -70,7 +70,7 @@ export default function LandingPage() {
               <div className="absolute -bottom-6 -right-6 bg-[#CD1B1B] rounded-xl p-5 shadow-lg">
                 <div className="flex items-center gap-2">
                   <Sparkles size={18} className="text-white" />
-                  <p className="text-white font-medium">Creating user onboarding flow</p>
+                  <p className="text-white font-medium">Find your note hassle free</p>
                 </div>
               </div>
             </div>
