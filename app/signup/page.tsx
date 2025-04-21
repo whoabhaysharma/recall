@@ -2,29 +2,59 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Lock, Mail, User, ArrowRight } from 'lucide-react';
+import { Lock, Mail, User, ArrowRight, AlertCircle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { signUpWithEmail, signInWithGoogle } from '../../firebase/auth';
 
 export default function SignupPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
     
-    // Simulate loading (in a real app, this would be an API call)
-    setTimeout(() => {
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters');
       setIsLoading(false);
-      // In a real app, redirect to dashboard after auth
-      window.location.href = '/app';
-    }, 1000);
+      return;
+    }
+    
+    const { user, error } = await signUpWithEmail(email, password, name);
+    
+    if (error) {
+      setError(error);
+      setIsLoading(false);
+      return;
+    }
+    
+    if (user) {
+      // Redirect to app dashboard
+      router.push('/app');
+    }
   };
 
-  const handleGoogleSignup = () => {
-    // In a real app, this would redirect to Google OAuth
-    console.log('Google signup clicked');
+  const handleGoogleSignup = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    const { user, error } = await signInWithGoogle();
+    
+    if (error) {
+      setError(error);
+      setIsLoading(false);
+      return;
+    }
+    
+    if (user) {
+      // Redirect to app dashboard
+      router.push('/app');
+    }
   };
 
   return (
@@ -41,10 +71,18 @@ export default function SignupPage() {
         </div>
 
         <div className="bg-gray-900 rounded-xl border border-gray-800 shadow-xl p-8">
+          {error && (
+            <div className="mb-6 bg-red-900/30 border border-red-800 text-red-200 px-4 py-3 rounded-lg flex items-start">
+              <AlertCircle size={20} className="mr-2 mt-0.5 flex-shrink-0" />
+              <p>{error}</p>
+            </div>
+          )}
+          
           {/* Google Sign Up Button */}
           <button
             onClick={handleGoogleSignup}
             className="w-full flex justify-center items-center py-3 px-4 border border-gray-700 rounded-lg shadow-sm text-white bg-gray-800 hover:bg-gray-750 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700 transition-colors mb-6"
+            disabled={isLoading}
           >
             <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
               <path

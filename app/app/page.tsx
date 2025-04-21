@@ -7,8 +7,10 @@ import NoteInput from '../../components/NoteInput';
 import ViewToggle from '../../components/ViewToggle';
 import NoteList from '../../components/NoteList';
 import AIPopup from '../../components/AIPopup';
-import { MessageSquare, Sparkles } from 'lucide-react';
+import { MessageSquare, Sparkles, LogOut, User } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
+import { useAuth } from '../context/AuthContext';
+import Link from 'next/link';
 
 // Types for our application
 interface Note {
@@ -41,7 +43,8 @@ interface Message {
 }
 
 // Main NotesApp
-export default function NotesApp() {
+export default function AppDashboard() {
+  const { user, logout, isLoading: authLoading } = useAuth();
   const [notes, setNotes] = useState<Note[]>([]);
   const [view, setView] = useState('grid');
   const [search, setSearch] = useState('');
@@ -261,11 +264,10 @@ export default function NotesApp() {
     }
   }, [search]);
 
-  // Filter notes based on search
-  const filtered = notes.filter((n) => {
-    if (!search) return true;
-    return n.content.toLowerCase().includes(search.toLowerCase());
-  });
+  // Get the filtered notes based on search input
+  const filtered = search 
+    ? notes.filter(note => note.content.toLowerCase().includes(search.toLowerCase()))
+    : notes;
 
   const handleAI = async (q: string) => {
     setAiMsgs([{ sender: 'user', text: q }]);
@@ -285,15 +287,31 @@ export default function NotesApp() {
     }
   };
 
+  // Handle loading state for authentication
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-950 text-gray-200">
+        <div className="flex flex-col items-center">
+          <svg className="animate-spin h-10 w-10 text-[#CD1B1B] mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <p className="text-gray-400">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Group handlers for the note list component
   const handlers = {
-    delete: deleteNote,
     edit: updateNote,
+    delete: deleteNote,
     pin: togglePinNote,
   };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Header with AI Search Focus */}
+      {/* Header with user information and logout */}
       <header className="bg-white dark:bg-gray-800 sticky top-0 z-10 shadow-sm">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
@@ -309,6 +327,23 @@ export default function NotesApp() {
             
             <div className="w-full sm:w-auto sm:flex-1 sm:max-w-xl">
               <SearchBar onSearch={setSearch} onAIQuery={handleAI} />
+            </div>
+
+            {/* User profile and logout */}
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
+                  <User size={16} className="text-gray-300" />
+                </div>
+                <span className="text-sm text-gray-600 dark:text-gray-300 hidden sm:inline">{user?.displayName || user?.email}</span>
+              </div>
+              <button 
+                onClick={logout}
+                className="text-sm flex items-center gap-1 py-1 px-2 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+              >
+                <LogOut size={14} />
+                <span className="hidden sm:inline">Sign out</span>
+              </button>
             </div>
           </div>
         </div>
