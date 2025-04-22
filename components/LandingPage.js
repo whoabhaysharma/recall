@@ -1,7 +1,7 @@
 "use client"
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { MessageSquare, Sparkles, Brain, Zap, Search, ChevronRight, ArrowRight } from 'lucide-react';
+import { MessageSquare, Sparkles, Brain, Zap, Search, ChevronRight, ArrowRight, Star, Clock, CloudLightning } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 // Animation variants
@@ -77,6 +77,26 @@ const FeatureCard = ({ icon, title, description }) => (
   </motion.div>
 );
 
+const TestimonialCard = ({ quote, name, role }) => (
+  <motion.div 
+    className="bg-gray-900/30 backdrop-blur-sm p-6 rounded-xl border border-gray-800/50"
+    variants={fadeIn}
+  >
+    <div className="flex space-x-1 mb-4">
+      <Star size={18} className="text-[#CD1B1B]" />
+      <Star size={18} className="text-[#CD1B1B]" />
+      <Star size={18} className="text-[#CD1B1B]" />
+      <Star size={18} className="text-[#CD1B1B]" />
+      <Star size={18} className="text-[#CD1B1B]" />
+    </div>
+    <p className="text-gray-300 mb-4 italic">"{quote}"</p>
+    <div>
+      <p className="text-white font-medium">{name}</p>
+      <p className="text-gray-400 text-sm">{role}</p>
+    </div>
+  </motion.div>
+);
+
 export default function LandingPage() {
   return (
     <div className="min-h-screen flex flex-col bg-gray-950 text-gray-200 overflow-hidden">
@@ -100,6 +120,9 @@ export default function LandingPage() {
               <Link href="#usecases" className="text-sm text-gray-300 hover:text-white transition-colors duration-200">
                 Use Cases
               </Link>
+              <Link href="#testimonials" className="text-sm text-gray-300 hover:text-white transition-colors duration-200">
+                Testimonials
+              </Link>
               <Link href="/app" className="px-4 py-2 rounded-lg bg-[#CD1B1B] text-white text-sm font-medium hover:bg-red-700 transition-colors duration-200">
                 Try Now
               </Link>
@@ -120,13 +143,13 @@ export default function LandingPage() {
             >
               <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-gray-800/70 border border-gray-700/50 mb-6">
                 <Sparkles size={16} className="text-[#CD1B1B] mr-2" />
-                <span className="text-sm font-medium text-gray-300">AI-Powered Note Taking</span>
+                <span className="text-sm font-medium text-gray-300">The Future of Personal Memory</span>
               </div>
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white mb-6">
-                Talk to Your <span className="text-[#CD1B1B]">Notes</span>
+                Your Second Brain, <span className="text-[#CD1B1B]">Now In Hinglish</span>
               </h1>
               <p className="text-xl text-gray-300 mb-8">
-                Store your memories, ideas, and knowledge in your personal AI assistant that understands Hinglish.
+                Never forget anything again. RECALL is your personal AI memory assistant that understands how you speak — in Hindi, English, or the perfect mix of both.
               </p>
               <div className="flex flex-wrap justify-center gap-4">
                 <Link href="/app" className="px-6 py-3 rounded-lg bg-[#CD1B1B] text-white font-medium text-base hover:bg-red-700 transition-all duration-300 hover:shadow-lg hover:shadow-red-900/30">
@@ -187,6 +210,58 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Benefits Section */}
+      <section className="py-16 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <motion.div 
+            className="grid md:grid-cols-3 gap-6 text-center"
+            variants={staggerContainer}
+            initial="initial"
+            whileInView="animate"
+            viewport={{ once: true }}
+          >
+            <motion.div 
+              variants={fadeIn}
+              className="px-6"
+            >
+              <div className="flex justify-center mb-4">
+                <div className="w-14 h-14 rounded-full flex items-center justify-center bg-[#CD1B1B]/10 border border-[#CD1B1B]/20">
+                  <Brain size={28} className="text-[#CD1B1B]" />
+                </div>
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-2">Remember Effortlessly</h3>
+              <p className="text-gray-400">Never struggle to recall important details. Let RECALL be your perfect memory companion.</p>
+            </motion.div>
+            
+            <motion.div 
+              variants={fadeIn}
+              className="px-6"
+            >
+              <div className="flex justify-center mb-4">
+                <div className="w-14 h-14 rounded-full flex items-center justify-center bg-[#CD1B1B]/10 border border-[#CD1B1B]/20">
+                  <CloudLightning size={28} className="text-[#CD1B1B]" />
+                </div>
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-2">Ask in Your Language</h3>
+              <p className="text-gray-400">Communicate naturally in Hinglish, Hindi, or English. RECALL understands how you actually speak.</p>
+            </motion.div>
+            
+            <motion.div 
+              variants={fadeIn}
+              className="px-6"
+            >
+              <div className="flex justify-center mb-4">
+                <div className="w-14 h-14 rounded-full flex items-center justify-center bg-[#CD1B1B]/10 border border-[#CD1B1B]/20">
+                  <Clock size={28} className="text-[#CD1B1B]" />
+                </div>
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-2">Save Precious Time</h3>
+              <p className="text-gray-400">Stop wasting hours searching through notes and chat histories. Get instant answers to your questions.</p>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Features Section */}
       <section id="features" className="py-24 relative">
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
@@ -197,9 +272,13 @@ export default function LandingPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Supercharge Your Memory</h2>
+            <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-gray-800/70 border border-gray-700/50 mb-4">
+              <Zap size={16} className="text-[#CD1B1B] mr-2" />
+              <span className="text-sm font-medium text-gray-300">Powerful Features</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Your Memory, Supercharged</h2>
             <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-              Recall helps you store and retrieve information effortlessly with AI that speaks your language.
+              RECALL transforms how you store and retrieve information with AI that speaks your language.
             </p>
           </motion.div>
           
@@ -212,20 +291,20 @@ export default function LandingPage() {
           >
             <FeatureCard 
               icon={<Brain size={24} className="text-[#CD1B1B]" />}
-              title="Smart Memory"
-              description="Store snippets of information, ideas, and memories without worrying about organization or tagging."
+              title="Smart Memory Storage"
+              description="Store snippets of information, ideas, and memories without worrying about organization, folders, or tags."
             />
             
             <FeatureCard 
               icon={<Zap size={24} className="text-[#CD1B1B]" />}
-              title="AI-Powered Recall"
-              description="Ask questions in Hindi, English, or Hinglish and get intelligent answers based on your saved notes."
+              title="Bilingual AI Recall"
+              description="Ask questions in Hindi, English, or Hinglish and get intelligent, contextual answers from your personal knowledge base."
             />
             
             <FeatureCard 
               icon={<Search size={24} className="text-[#CD1B1B]" />}
-              title="Semantic Search"
-              description="Find what you need instantly with search that understands context, meaning, and Hinglish queries."
+              title="Contextual Search"
+              description="Find what you need instantly with search that understands context, meaning, and the nuances of mixed-language queries."
             />
           </motion.div>
         </div>
@@ -241,9 +320,13 @@ export default function LandingPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">How People Use Recall</h2>
+            <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-gray-800/70 border border-gray-700/50 mb-4">
+              <MessageSquare size={16} className="text-[#CD1B1B] mr-2" />
+              <span className="text-sm font-medium text-gray-300">Real-World Uses</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">RECALL In Your Daily Life</h2>
             <p className="text-xl text-gray-300 max-w-2xl mx-auto">
-              Real-life examples of how Recall helps people remember what matters.
+              See how RECALL helps thousands of users remember what matters most.
             </p>
           </motion.div>
           
@@ -261,7 +344,7 @@ export default function LandingPage() {
                 </div>
                 <div>
                   <h3 className="text-2xl font-semibold text-white">Roz Ki Zindagi</h3>
-                  <p className="text-gray-400 mt-2">Keep track of day-to-day information you need to remember</p>
+                  <p className="text-gray-400 mt-2">Never forget those small but important everyday details</p>
                 </div>
               </div>
               
@@ -294,7 +377,7 @@ export default function LandingPage() {
                 </div>
                 <div>
                   <h3 className="text-2xl font-semibold text-white">Work & Business</h3>
-                  <p className="text-gray-400 mt-2">Never forget important work details or business information</p>
+                  <p className="text-gray-400 mt-2">Stay on top of critical professional information without the stress</p>
                 </div>
               </div>
               
@@ -314,7 +397,7 @@ export default function LandingPage() {
               </div>
             </motion.div>
             
-            {/* Category 3: Health & Wellness */}
+            {/* Category 3: Health & Important Info */}
             <motion.div 
               initial={{ opacity: 0 }}
               whileInView={{ opacity: 1 }}
@@ -350,6 +433,54 @@ export default function LandingPage() {
         </div>
       </section>
       
+      {/* Testimonials */}
+      <section id="testimonials" className="py-24 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <motion.div 
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-gray-800/70 border border-gray-700/50 mb-4">
+              <Star size={16} className="text-[#CD1B1B] mr-2" />
+              <span className="text-sm font-medium text-gray-300">User Love</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">What Our Users Say</h2>
+            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+              Thousands of users rely on RECALL to remember what matters.
+            </p>
+          </motion.div>
+          
+          <motion.div 
+            className="grid md:grid-cols-3 gap-6"
+            variants={staggerContainer}
+            initial="initial"
+            whileInView="animate"
+            viewport={{ once: true }}
+          >
+            <TestimonialCard 
+              quote="Meetings, project details, important dates - RECALL remembers it all for me. It's like having a personal assistant who speaks my language."
+              name="Rahul Sharma"
+              role="Product Manager"
+            />
+            
+            <TestimonialCard 
+              quote="As a doctor, I need to keep track of so many patient details. RECALL helps me remember everything from medical histories to treatment plans."
+              name="Dr. Priya Malhotra"
+              role="Physician"
+            />
+            
+            <TestimonialCard 
+              quote="I'm terrible at remembering things. RECALL has changed my life - from shopping lists to important conversations, everything is just a question away."
+              name="Anjali Singh"
+              role="Digital Marketing Specialist"
+            />
+          </motion.div>
+        </div>
+      </section>
+      
       {/* CTA Section */}
       <section className="py-20 relative">
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
@@ -360,12 +491,12 @@ export default function LandingPage() {
             viewport={{ once: true }}
             transition={{ duration: 0.7 }}
           >
-            <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">Ready to remember everything?</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">Your Perfect Memory Awaits</h2>
             <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
-              Start capturing and conversing with your knowledge today. No more forgetting important details.
+              Join thousands of users who never forget important information. Your second brain is just a conversation away.
             </p>
             <Link href="/app" className="inline-flex items-center px-8 py-4 rounded-lg bg-[#CD1B1B] text-white font-medium text-lg hover:bg-red-700 transition-all duration-300 hover:shadow-lg hover:shadow-red-900/30 group">
-              Get Started with Recall
+              Get Started with RECALL
               <ArrowRight size={18} className="ml-2 group-hover:translate-x-1 transition-transform duration-300" />
             </Link>
           </motion.div>
