@@ -1,390 +1,393 @@
-import React from 'react';
+"use client"
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { MessageSquare, Sparkles, Brain, Zap, Search } from 'lucide-react';
+import { MessageSquare, Sparkles, Brain, Zap, Search, ChevronRight, ArrowRight } from 'lucide-react';
+import { motion } from 'framer-motion';
+
+// Animation variants
+const fadeIn = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.6 } },
+};
+
+const staggerContainer = {
+  animate: {
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const UseCaseChat = ({ question, answer, icon, delay = 0 }) => {
+  const [isVisible, setIsVisible] = useState(false);
+  
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsVisible(true);
+    }, delay);
+    
+    return () => clearTimeout(timer);
+  }, [delay]);
+  
+  return (
+    <div className="space-y-3 max-w-xl mx-auto">
+      {/* User question */}
+      <motion.div 
+        className="flex items-start gap-3"
+        initial={{ opacity: 0, y: 10 }}
+        animate={isVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center flex-shrink-0">
+          <MessageSquare size={16} className="text-gray-300" />
+        </div>
+        <div className="bg-gray-800 p-3 rounded-xl flex-1">
+          <p className="text-gray-300">{question}</p>
+        </div>
+      </motion.div>
+      
+      {/* AI answer */}
+      <motion.div 
+        className="flex items-start gap-3 pl-8"
+        initial={{ opacity: 0, y: 10 }}
+        animate={isVisible ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
+        transition={{ duration: 0.5, delay: 0.5 }}
+      >
+        <div className="w-8 h-8 rounded-full bg-[#CD1B1B] flex items-center justify-center flex-shrink-0">
+          {icon || <Sparkles size={16} className="text-white" />}
+        </div>
+        <div className="bg-[#CD1B1B]/10 p-3 rounded-xl border border-[#CD1B1B]/20 flex-1">
+          <p className="text-gray-200">{answer}</p>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
+const FeatureCard = ({ icon, title, description }) => (
+  <motion.div 
+    className="bg-gray-900/50 backdrop-blur-sm p-6 rounded-xl border border-gray-800/50 hover:border-gray-700/50 transition-all duration-300 hover:-translate-y-1"
+    variants={fadeIn}
+  >
+    <div className="w-12 h-12 bg-gray-800/70 rounded-xl flex items-center justify-center mb-5">
+      {icon}
+    </div>
+    <h3 className="text-xl font-semibold mb-3 text-white">{title}</h3>
+    <p className="text-gray-400">{description}</p>
+  </motion.div>
+);
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-gray-950 text-gray-200">
+    <div className="min-h-screen flex flex-col bg-gray-950 text-gray-200 overflow-hidden">
+      {/* Decorative background elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-[30%] -left-[10%] w-[500px] h-[500px] bg-[#CD1B1B]/20 rounded-full blur-[120px] opacity-30" />
+        <div className="absolute top-[60%] -right-[5%] w-[400px] h-[400px] bg-[#CD1B1B]/10 rounded-full blur-[100px] opacity-20" />
+      </div>
+      
+      {/* Navigation */}
+      <nav className="relative z-20 border-b border-gray-800/50 backdrop-blur-md bg-gray-900/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center">
+              <img src="/logo-white.svg" alt="RECALL" className="h-8" />
+            </div>
+            <div className="flex items-center gap-6">
+              <Link href="#features" className="text-sm text-gray-300 hover:text-white transition-colors duration-200">
+                Features
+              </Link>
+              <Link href="#usecases" className="text-sm text-gray-300 hover:text-white transition-colors duration-200">
+                Use Cases
+              </Link>
+              <Link href="/app" className="px-4 py-2 rounded-lg bg-[#CD1B1B] text-white text-sm font-medium hover:bg-red-700 transition-colors duration-200">
+                Try Now
+              </Link>
+            </div>
+          </div>
+        </div>
+      </nav>
+
       {/* Hero Section */}
-      <section className="bg-gray-900">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-24 md:py-32">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="space-y-8">
-              <div className="space-y-5">
-                <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700">
-                  <Sparkles size={16} className="text-[#CD1B1B] mr-2" />
-                  <span className="text-sm font-medium text-gray-300">AI-Powered Note Taking</span>
-                </div>
-                <div className="flex items-center">
-                  <img src="/logo-white.svg" alt="RECALL" className="h-12 mb-4" />
-                </div>
-                <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white">
-                  Talk to Your <span className="text-[#CD1B1B]">Notes</span>
-                </h1>
-                <p className="text-xl md:text-2xl text-gray-300">
-                  Store your memories, ideas, and knowledge. Then chat with them using AI.
-                </p>
+      <section className="relative pt-20 pb-32 overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="relative z-10">
+            <motion.div 
+              className="text-center max-w-3xl mx-auto mb-12"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7 }}
+            >
+              <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-gray-800/70 border border-gray-700/50 mb-6">
+                <Sparkles size={16} className="text-[#CD1B1B] mr-2" />
+                <span className="text-sm font-medium text-gray-300">AI-Powered Note Taking</span>
               </div>
-              <div className="flex flex-wrap gap-4">
-                <Link href="/app" className="px-6 py-3 rounded-lg bg-[#CD1B1B] text-white font-medium text-base hover:bg-red-700 transition shadow-sm">
-                  Try Now
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white mb-6">
+                Talk to Your <span className="text-[#CD1B1B]">Notes</span>
+              </h1>
+              <p className="text-xl text-gray-300 mb-8">
+                Store your memories, ideas, and knowledge in your personal AI assistant that understands Hinglish.
+              </p>
+              <div className="flex flex-wrap justify-center gap-4">
+                <Link href="/app" className="px-6 py-3 rounded-lg bg-[#CD1B1B] text-white font-medium text-base hover:bg-red-700 transition-all duration-300 hover:shadow-lg hover:shadow-red-900/30">
+                  Get Started Free
                 </Link>
-                <a href="#features" className="px-6 py-3 rounded-lg bg-gray-800 text-gray-200 font-medium text-base border border-gray-700 hover:bg-gray-750 transition">
-                  Learn More
+                <a href="#demo" className="px-6 py-3 rounded-lg bg-gray-800/70 text-gray-200 font-medium text-base border border-gray-700/50 hover:bg-gray-700/50 transition-all duration-300">
+                  See How It Works
                 </a>
               </div>
-            </div>
-            <div className="relative">
-              <div className="bg-gray-800 rounded-2xl p-6 border border-gray-700 shadow-lg">
-                <div className="flex items-center gap-3 mb-4 border-b border-gray-700 pb-3">
-                  <div className="flex space-x-1">
-                    <div className="w-2.5 h-2.5 rounded-sm bg-[#CD1B1B]"></div>
-                    <div className="w-2.5 h-2.5 rounded-sm bg-[#CD1B1B]"></div>
-                    <div className="w-2.5 h-2.5 rounded-sm bg-[#CD1B1B]"></div>
+            </motion.div>
+            
+            {/* Demo terminal */}
+            <motion.div 
+              className="relative max-w-3xl mx-auto"
+              initial={{ opacity: 0, y: 40 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.2 }}
+            >
+              <div className="bg-gray-900/80 backdrop-blur-sm rounded-xl overflow-hidden border border-gray-800/70 shadow-2xl shadow-black/30">
+                <div className="flex items-center gap-3 p-4 border-b border-gray-800/50">
+                  <div className="flex space-x-1.5">
+                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
                   </div>
-                  <div className="flex-1 text-center text-sm font-mono text-gray-400">Recall - AI Notes</div>
+                  <div className="flex-1 text-center text-sm font-mono text-gray-400">recall.ai</div>
                 </div>
-                <div className="space-y-4">
-                  <div className="bg-gray-750 rounded-lg p-4 border border-gray-700">
-                    <p className="text-gray-300">Dinner @ Dilli Haat with Rahul bhai: Try the momos from the Northeastern stall and that butter chicken place near the entrance. Parking scene was totally chill, hardly any bheed-bhaad after 6pm.</p>
-                  </div>
-                  <div className="bg-gray-750 rounded-lg p-4 border border-gray-700">
-                    <p className="text-gray-300">Meeting with design team: Need to finalize app ke icons by Friday. Aryan said he'll finish UI screens but usko thoda time do yaar, banda busy hai.</p>
-                  </div>
-                  <div className="bg-[#CD1B1B]/10 rounded-lg p-4 border border-[#CD1B1B]/20">
-                    <div className="flex items-center gap-2 mb-2">
-                      <MessageSquare size={16} className="text-[#CD1B1B]" />
-                      <p className="text-sm font-medium text-[#CD1B1B]">Question for AI</p>
-                    </div>
-                    <p className="text-gray-200">Yaar, where did I go for dinner with Rahul last month?</p>
-                  </div>
-                  <div className="bg-gray-750 rounded-lg p-4 border border-gray-700">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Sparkles size={16} className="text-[#CD1B1B]" />
-                      <p className="text-sm font-medium text-[#CD1B1B]">AI Answer</p>
-                    </div>
-                    <p className="text-gray-300">You had dinner with Rahul bhai at Dilli Haat. You mentioned trying momos from the Northeastern stall and a butter chicken place near the entrance. You also noted that parking wasn't crowded after 6pm.</p>
-                  </div>
+                
+                <div id="demo" className="p-6 space-y-8">
+                  <UseCaseChat 
+                    question="Yaar, Sharma uncle ne Dwarka mein jo property batai thi, uska rate kya tha?"
+                    answer="Sharma uncle ne 2 BHK ka rate bataya tha Dwarka Sector 12 mein - 85 lakh, ready to move. Maintenance charges 3k/month. Parking included hai. Metro station se 10 min walk."
+                    delay={800}
+                  />
+                  
+                  <UseCaseChat 
+                    question="Kal jo doctor ne medicines batai thi uska schedule kya tha? Bhool gaya main"
+                    answer="Dolo 650 - din mein 2 baar khana ke baad. Multivitamin subah khali pet. Aur vo green wali tablet sirf raat ko sone se pehle. 5 din tak lena hai, uske baad review ke liye jana hai."
+                    delay={2500}
+                  />
                 </div>
               </div>
-              <div className="absolute -bottom-6 -right-6 bg-[#CD1B1B] rounded-xl p-5 shadow-lg">
+
+              {/* Floating badge */}
+              <motion.div 
+                className="absolute -bottom-6 -right-6 bg-[#CD1B1B] rounded-xl p-4 shadow-lg"
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.5, delay: 3.5 }}
+              >
                 <div className="flex items-center gap-2">
                   <Sparkles size={18} className="text-white" />
-                  <p className="text-white font-medium">Find your note hassle free</p>
+                  <p className="text-white font-medium">Find anything instantly</p>
                 </div>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-24 bg-gray-950">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-white">Supercharge Your Memory</h2>
-            <p className="mt-4 text-xl text-gray-300 max-w-3xl mx-auto">
-              Recall helps you store and retrieve information effortlessly with AI assistance.
+      <section id="features" className="py-24 relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <motion.div 
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Supercharge Your Memory</h2>
+            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+              Recall helps you store and retrieve information effortlessly with AI that speaks your language.
             </p>
-          </div>
+          </motion.div>
           
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-gray-900 p-8 rounded-xl border border-gray-800 hover:border-gray-700 transition">
-              <div className="w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center mb-6">
-                <Brain size={24} className="text-[#CD1B1B]" />
-              </div>
-              <h3 className="text-xl font-semibold mb-4 text-white">Smart Memory</h3>
-              <p className="text-gray-400">
-                Store snippets of information, ideas, and memories without worrying about organization.
-              </p>
-            </div>
+          <motion.div 
+            className="grid md:grid-cols-3 gap-6"
+            variants={staggerContainer}
+            initial="initial"
+            whileInView="animate"
+            viewport={{ once: true }}
+          >
+            <FeatureCard 
+              icon={<Brain size={24} className="text-[#CD1B1B]" />}
+              title="Smart Memory"
+              description="Store snippets of information, ideas, and memories without worrying about organization or tagging."
+            />
             
-            <div className="bg-gray-900 p-8 rounded-xl border border-gray-800 hover:border-gray-700 transition">
-              <div className="w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center mb-6">
-                <Zap size={24} className="text-[#CD1B1B]" />
-              </div>
-              <h3 className="text-xl font-semibold mb-4 text-white">AI-Powered Recall</h3>
-              <p className="text-gray-400">
-                Ask questions and get intelligent answers based on your saved notes and memories.
-              </p>
-            </div>
+            <FeatureCard 
+              icon={<Zap size={24} className="text-[#CD1B1B]" />}
+              title="AI-Powered Recall"
+              description="Ask questions in Hindi, English, or Hinglish and get intelligent answers based on your saved notes."
+            />
             
-            <div className="bg-gray-900 p-8 rounded-xl border border-gray-800 hover:border-gray-700 transition">
-              <div className="w-12 h-12 bg-gray-800 rounded-lg flex items-center justify-center mb-6">
-                <Search size={24} className="text-[#CD1B1B]" />
-              </div>
-              <h3 className="text-xl font-semibold mb-4 text-white">Semantic Search</h3>
-              <p className="text-gray-400">
-                Find what you need quickly with search that understands context and meaning.
-              </p>
-            </div>
-          </div>
+            <FeatureCard 
+              icon={<Search size={24} className="text-[#CD1B1B]" />}
+              title="Semantic Search"
+              description="Find what you need instantly with search that understands context, meaning, and Hinglish queries."
+            />
+          </motion.div>
         </div>
       </section>
       
       {/* Use Cases Section */}
-      <section className="py-24 bg-gray-950">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-white">Dekho Kaise Kaam Karta Hai</h2>
-            <p className="mt-4 text-xl text-gray-300 max-w-3xl mx-auto">
-              Yeh dekho real-life examples, bilkul tumhari life ke jaise
+      <section id="usecases" className="py-24 relative bg-gray-900/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <motion.div 
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">How People Use Recall</h2>
+            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+              Real-life examples of how Recall helps people remember what matters.
             </p>
-          </div>
+          </motion.div>
           
-          <div className="mb-16 bg-gray-900 p-6 rounded-xl border border-gray-800">
-            <div className="text-center mb-8">
-              <div className="inline-flex items-center px-4 py-2 rounded-full bg-gray-800 border border-gray-700 mb-4">
-                <Brain size={18} className="text-[#CD1B1B] mr-2" />
-                <span className="text-base font-medium text-gray-300">Har Roz Ke Kaam</span>
+          <div className="space-y-20">
+            {/* Category 1: Personal Life */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+            >
+              <div className="mb-10 flex flex-col md:flex-row items-center md:items-end gap-6">
+                <div className="w-14 h-14 rounded-full bg-gray-800/70 flex items-center justify-center mb-2">
+                  <Brain size={28} className="text-[#CD1B1B]" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-semibold text-white">Roz Ki Zindagi</h3>
+                  <p className="text-gray-400 mt-2">Keep track of day-to-day information you need to remember</p>
+                </div>
               </div>
-              <h3 className="text-2xl font-semibold text-white">Roz Ke Kaam Ko Banao Aasan</h3>
-            </div>
+              
+              <div className="grid md:grid-cols-2 gap-8">
+                <div className="space-y-6">
+                  <UseCaseChat 
+                    question="Vo naya cafe kidhar tha jahan pe last week gaye the? Menu mein kya sahi tha?"
+                    answer="Cafe '91 Springs, Hudson Lane mein. Cold coffee ekdum mast thi, aur vo cheese loaded fries bhi killer the. Happy hours 3-7 PM, 20% off. Parking thodi issue hai but Gtb Nagar metro se 5 min hai."
+                  />
+                </div>
+                <div className="space-y-6">
+                  <UseCaseChat 
+                    question="Priya di ka birthday aa raha hai next month. Kya gift de sakte hain? Pichli baar kya pasand aaya tha?"
+                    answer="Priya di ko pichli baar vo handcrafted leather journal bohot pasand aaya tha. Unhe plants bhi bohot pasand hain. Recently unhone cooking classes ke bare mein baat ki thi. Aur unka favorite perfume Chanel No. 5 hai."
+                  />
+                </div>
+              </div>
+            </motion.div>
             
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Example 1 */}
-              <div className="bg-gray-800 p-6 rounded-xl border border-gray-700 relative">
-                <div className="absolute -top-3 left-4 bg-[#CD1B1B] px-3 py-1 rounded text-sm font-medium text-white">
-                  Use Case #1
+            {/* Category 2: Work & Business */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+            >
+              <div className="mb-10 flex flex-col md:flex-row items-center md:items-end gap-6">
+                <div className="w-14 h-14 rounded-full bg-gray-800/70 flex items-center justify-center mb-2">
+                  <Zap size={28} className="text-[#CD1B1B]" />
                 </div>
-                <h4 className="text-xl font-semibold mb-3 text-white mt-2">Doctor's Prescription</h4>
-                <div className="space-y-4 mt-4">
-                  <div className="flex items-start gap-3">
-                    <div className="min-w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
-                      <MessageSquare size={16} className="text-gray-300" />
-                    </div>
-                    <div className="bg-gray-750 p-3 rounded-lg flex-1">
-                      <p className="text-gray-300">Kal jo doctor ne medicines batai thi uska schedule kya tha? Bhool gaya main</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="min-w-8 h-8 rounded-full bg-[#CD1B1B] flex items-center justify-center">
-                      <Sparkles size={16} className="text-white" />
-                    </div>
-                    <div className="bg-[#CD1B1B]/10 p-3 rounded-lg border border-[#CD1B1B]/20 flex-1">
-                      <p className="text-gray-200">Dolo 650 - din mein 2 baar khana ke baad. Multivitamin subah khali pet. Aur vo green wali tablet sirf raat ko sone se pehle. 5 din tak lena hai, uske baad review ke liye jana hai.</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-4 text-sm text-gray-400">
-                  <p>Apne medical prescriptions ko save karo aur kabhi bhi details check karo</p>
+                <div>
+                  <h3 className="text-2xl font-semibold text-white">Work & Business</h3>
+                  <p className="text-gray-400 mt-2">Never forget important work details or business information</p>
                 </div>
               </div>
-
-              {/* Example 2 */}
-              <div className="bg-gray-800 p-6 rounded-xl border border-gray-700 relative">
-                <div className="absolute -top-3 left-4 bg-[#CD1B1B] px-3 py-1 rounded text-sm font-medium text-white">
-                  Use Case #2
+              
+              <div className="grid md:grid-cols-2 gap-8">
+                <div className="space-y-6">
+                  <UseCaseChat 
+                    question="Vo vendor ka contact info mil sakta hai jisne office ke liye furniture quote bheja tha?"
+                    answer="Urban Office Solutions - Rajesh bhai ka number 98110-55666. Quote 3.2L ka tha, 10 workstations ke liye. Installation free hai, 2 saal warranty. Advance 40% chahiye, baaki delivery pe."
+                  />
                 </div>
-                <h4 className="text-xl font-semibold mb-3 text-white mt-2">Restaurant Details</h4>
-                <div className="space-y-4 mt-4">
-                  <div className="flex items-start gap-3">
-                    <div className="min-w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
-                      <MessageSquare size={16} className="text-gray-300" />
-                    </div>
-                    <div className="bg-gray-750 p-3 rounded-lg flex-1">
-                      <p className="text-gray-300">Yaar vo naya cafe kidhar tha jahan pe last week gaye the? Menu mein kya sahi tha?</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="min-w-8 h-8 rounded-full bg-[#CD1B1B] flex items-center justify-center">
-                      <Sparkles size={16} className="text-white" />
-                    </div>
-                    <div className="bg-[#CD1B1B]/10 p-3 rounded-lg border border-[#CD1B1B]/20 flex-1">
-                      <p className="text-gray-200">Cafe '91 Springs, Hudson Lane mein. Cold coffee ekdum mast thi, aur vo cheese loaded fries bhi killer the. Happy hours 3-7 PM, 20% off. Parking thodi issue hai but Gtb Nagar metro se 5 min hai.</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-4 text-sm text-gray-400">
-                  <p>Favourite jagahon ki details yaad rakho - location, menu, offers sab kuch</p>
+                <div className="space-y-6">
+                  <UseCaseChat 
+                    question="Chennai team meeting mein next steps kya decide hue the?"
+                    answer="1. UI design ko finalize karna hai by next Friday. 2. Backend integration 3 hafton mein complete karni hai. 3. Manoj aur Shreya QA team ke saath test plan finalize karenge. 4. Next review call 15th ko hai 4pm pe."
+                  />
                 </div>
               </div>
-            </div>
-          </div>
-
-          <div className="mb-16 bg-gray-900 p-6 rounded-xl border border-gray-800">
-            <div className="text-center mb-8">
-              <div className="inline-flex items-center px-4 py-2 rounded-full bg-gray-800 border border-gray-700 mb-4">
-                <Zap size={18} className="text-[#CD1B1B] mr-2" />
-                <span className="text-base font-medium text-gray-300">Work & Business</span>
-              </div>
-              <h3 className="text-2xl font-semibold text-white">Office Ke Kaam Mein Bano Smart</h3>
-            </div>
+            </motion.div>
             
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Example 3 */}
-              <div className="bg-gray-800 p-6 rounded-xl border border-gray-700 relative">
-                <div className="absolute -top-3 left-4 bg-[#CD1B1B] px-3 py-1 rounded text-sm font-medium text-white">
-                  Use Case #3
+            {/* Category 3: Health & Wellness */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+            >
+              <div className="mb-10 flex flex-col md:flex-row items-center md:items-end gap-6">
+                <div className="w-14 h-14 rounded-full bg-gray-800/70 flex items-center justify-center mb-2">
+                  <Search size={28} className="text-[#CD1B1B]" />
                 </div>
-                <h4 className="text-xl font-semibold mb-3 text-white mt-2">Business Contacts</h4>
-                <div className="space-y-4 mt-4">
-                  <div className="flex items-start gap-3">
-                    <div className="min-w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
-                      <MessageSquare size={16} className="text-gray-300" />
-                    </div>
-                    <div className="bg-gray-750 p-3 rounded-lg flex-1">
-                      <p className="text-gray-300">Vo vendor ka contact info mil sakta hai jisne office ke liye furniture quote bheja tha?</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="min-w-8 h-8 rounded-full bg-[#CD1B1B] flex items-center justify-center">
-                      <Sparkles size={16} className="text-white" />
-                    </div>
-                    <div className="bg-[#CD1B1B]/10 p-3 rounded-lg border border-[#CD1B1B]/20 flex-1">
-                      <p className="text-gray-200">Urban Office Solutions - Rajesh bhai ka number 98110-55666. Quote 3.2L ka tha, 10 workstations ke liye. Installation free hai, 2 saal warranty. Advance 40% chahiye, baaki delivery pe.</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-4 text-sm text-gray-400">
-                  <p>Business contacts, quotes aur deals ki details ko easily track karo</p>
+                <div>
+                  <h3 className="text-2xl font-semibold text-white">Health & Important Info</h3>
+                  <p className="text-gray-400 mt-2">Keep track of critical information you can't afford to forget</p>
                 </div>
               </div>
-
-              {/* Example 4 */}
-              <div className="bg-gray-800 p-6 rounded-xl border border-gray-700 relative">
-                <div className="absolute -top-3 left-4 bg-[#CD1B1B] px-3 py-1 rounded text-sm font-medium text-white">
-                  Use Case #4
+              
+              <div className="grid md:grid-cols-2 gap-8">
+                <div className="space-y-6">
+                  <UseCaseChat 
+                    question="Bhai, aaj Sharma uncle ne kuch property ke baare mein bola tha Dwarka mein. Rate bhi bataya tha, par yaad nahi aa raha."
+                    answer="Sharma uncle ne 2 BHK ka rate bataya tha Dwarka Sector 12 mein - 85 lakh, ready to move. Maintenance charges 3k/month. Parking included hai. Metro station se 10 min walk."
+                  />
                 </div>
-                <h4 className="text-xl font-semibold mb-3 text-white mt-2">Property Details</h4>
-                <div className="space-y-4 mt-4">
-                  <div className="flex items-start gap-3">
-                    <div className="min-w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
-                      <MessageSquare size={16} className="text-gray-300" />
-                    </div>
-                    <div className="bg-gray-750 p-3 rounded-lg flex-1">
-                      <p className="text-gray-300">Bhai, aaj Sharma uncle ne kuch property ke baare mein bola tha Dwarka mein. Rate bhi bataya tha, par yaad nahi aa raha. Kya bol rahe the?</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="min-w-8 h-8 rounded-full bg-[#CD1B1B] flex items-center justify-center">
-                      <Sparkles size={16} className="text-white" />
-                    </div>
-                    <div className="bg-[#CD1B1B]/10 p-3 rounded-lg border border-[#CD1B1B]/20 flex-1">
-                      <p className="text-gray-200">Sharma uncle ne 2 BHK ka rate bataya tha Dwarka Sector 12 mein - 85 lakh, ready to move. Maintenance charges 3k/month. Parking included hai. Metro station se 10 min walk.</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-4 text-sm text-gray-400">
-                  <p>Property details, rates aur locations ko save karo future reference ke liye</p>
+                <div className="space-y-6">
+                  <UseCaseChat 
+                    question="Kal jo doctor ne medicines batai thi uska schedule kya tha?"
+                    answer="Dolo 650 - din mein 2 baar khana ke baad. Multivitamin subah khali pet. Aur vo green wali tablet sirf raat ko sone se pehle. 5 din tak lena hai, uske baad review ke liye jana hai."
+                  />
                 </div>
               </div>
-            </div>
-          </div>
-
-          <div className="bg-gray-900 p-6 rounded-xl border border-gray-800">
-            <div className="text-center mb-8">
-              <div className="inline-flex items-center px-4 py-2 rounded-full bg-gray-800 border border-gray-700 mb-4">
-                <Search size={18} className="text-[#CD1B1B] mr-2" />
-                <span className="text-base font-medium text-gray-300">Personal Life</span>
-              </div>
-              <h3 className="text-2xl font-semibold text-white">Apna Personal Life Karo Organize</h3>
-            </div>
-            
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Example 5 */}
-              <div className="bg-gray-800 p-6 rounded-xl border border-gray-700 relative">
-                <div className="absolute -top-3 left-4 bg-[#CD1B1B] px-3 py-1 rounded text-sm font-medium text-white">
-                  Use Case #5
-                </div>
-                <h4 className="text-xl font-semibold mb-3 text-white mt-2">Gift Ideas</h4>
-                <div className="space-y-4 mt-4">
-                  <div className="flex items-start gap-3">
-                    <div className="min-w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
-                      <MessageSquare size={16} className="text-gray-300" />
-                    </div>
-                    <div className="bg-gray-750 p-3 rounded-lg flex-1">
-                      <p className="text-gray-300">Arre yaar, Priya di ka birthday aa raha hai next month. Kya gift de sakte hain? Pichli baar kya pasand aaya tha unko?</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="min-w-8 h-8 rounded-full bg-[#CD1B1B] flex items-center justify-center">
-                      <Sparkles size={16} className="text-white" />
-                    </div>
-                    <div className="bg-[#CD1B1B]/10 p-3 rounded-lg border border-[#CD1B1B]/20 flex-1">
-                      <p className="text-gray-200">Priya di ko pichli baar vo handcrafted leather journal bohot pasand aaya tha. Unhe plants bhi bohot pasand hain. Recently unhone cooking classes ke bare mein baat ki thi. Aur unka favorite perfume Chanel No. 5 hai jo khatam hone wala tha.</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-4 text-sm text-gray-400">
-                  <p>Gift ideas aur doston ke preferences ko track karo special occasions ke liye</p>
-                </div>
-              </div>
-
-              {/* Example 6 */}
-              <div className="bg-gray-800 p-6 rounded-xl border border-gray-700 relative">
-                <div className="absolute -top-3 left-4 bg-[#CD1B1B] px-3 py-1 rounded text-sm font-medium text-white">
-                  Use Case #6
-                </div>
-                <h4 className="text-xl font-semibold mb-3 text-white mt-2">Movie/Show Recommendations</h4>
-                <div className="space-y-4 mt-4">
-                  <div className="flex items-start gap-3">
-                    <div className="min-w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
-                      <MessageSquare size={16} className="text-gray-300" />
-                    </div>
-                    <div className="bg-gray-750 p-3 rounded-lg flex-1">
-                      <p className="text-gray-300">Vo konsi series thi jo Rohit ne recommend ki thi? Usne kaha tha must watch hai</p>
-                    </div>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="min-w-8 h-8 rounded-full bg-[#CD1B1B] flex items-center justify-center">
-                      <Sparkles size={16} className="text-white" />
-                    </div>
-                    <div className="bg-[#CD1B1B]/10 p-3 rounded-lg border border-[#CD1B1B]/20 flex-1">
-                      <p className="text-gray-200">Rohit ne "The Night Manager" recommend ki thi, Apple TV+ pe hai. Usne bola tha 6 episodes hain, ek weekend mein finish ho jayegi aur screenplay ekdum paisa vasool hai. Aur Aditya Roy Kapur ka best performance hai usme.</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="mt-4 text-sm text-gray-400">
-                  <p>Movies, shows aur recommendations ko save karo aur kabhi miss mat karo</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-12 text-center">
-            <div className="inline-flex items-center px-6 py-3 rounded-xl bg-[#CD1B1B]/10 border border-[#CD1B1B]/20 mb-6">
-              <Sparkles size={20} className="text-[#CD1B1B] mr-3" />
-              <span className="text-xl font-medium text-white">Aur bhi bohot kuch...</span>
-            </div>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              Bas type karo jo yaad rakhna hai, aur jab bhi zarurat ho, pooch lo. Ekdum easy!
-            </p>
+            </motion.div>
           </div>
         </div>
       </section>
-
+      
       {/* CTA Section */}
-      <section className="py-20 bg-gray-900">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">Ready to enhance your memory?</h2>
-          <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
-            Start capturing and conversing with your knowledge today. No more forgetting important details.
-          </p>
-          <Link href="/app" className="inline-block px-8 py-4 rounded-lg bg-[#CD1B1B] text-white font-medium text-lg hover:bg-red-700 transition shadow-sm">
-            Get Started with Recall
-          </Link>
+      <section className="py-20 relative">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+          <motion.div 
+            className="bg-gray-900/50 backdrop-blur-sm rounded-2xl p-12 border border-gray-800/50 text-center"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7 }}
+          >
+            <h2 className="text-3xl md:text-4xl font-bold mb-6 text-white">Ready to remember everything?</h2>
+            <p className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+              Start capturing and conversing with your knowledge today. No more forgetting important details.
+            </p>
+            <Link href="/app" className="inline-flex items-center px-8 py-4 rounded-lg bg-[#CD1B1B] text-white font-medium text-lg hover:bg-red-700 transition-all duration-300 hover:shadow-lg hover:shadow-red-900/30 group">
+              Get Started with Recall
+              <ArrowRight size={18} className="ml-2 group-hover:translate-x-1 transition-transform duration-300" />
+            </Link>
+          </motion.div>
         </div>
       </section>
       
       {/* Footer */}
-      <footer className="bg-gray-900 text-gray-400 py-12 border-t border-gray-800">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
+      <footer className="bg-gray-900/30 text-gray-400 py-12 mt-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="mb-6 md:mb-0">
-              <div className="flex items-center gap-2">
-                <img src="/logo-white.svg" alt="RECALL" className="h-8" />
-              </div>
-              <p className="mt-2">Your AI memory assistant</p>
+              <img src="/logo-white.svg" alt="RECALL" className="h-8 mb-2" />
+              <p className="text-sm">Your AI memory assistant</p>
             </div>
             <div className="flex gap-8">
-              <a href="#" className="hover:text-white transition">About</a>
-              <a href="#" className="hover:text-white transition">Privacy</a>
-              <a href="#" className="hover:text-white transition">Terms</a>
-              <a href="#" className="hover:text-white transition">Contact</a>
+              <a href="#" className="text-sm hover:text-white transition-colors duration-200">About</a>
+              <a href="#" className="text-sm hover:text-white transition-colors duration-200">Privacy</a>
+              <a href="#" className="text-sm hover:text-white transition-colors duration-200">Terms</a>
+              <a href="#" className="text-sm hover:text-white transition-colors duration-200">Contact</a>
             </div>
           </div>
-          <div className="mt-8 pt-8 border-t border-gray-800 text-center md:text-left">
+          <div className="mt-8 pt-8 border-t border-gray-800/50 text-center md:text-left text-sm">
             <p>&copy; {new Date().getFullYear()} RECALL. All rights reserved.</p>
           </div>
         </div>
