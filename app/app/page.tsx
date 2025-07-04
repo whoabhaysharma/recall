@@ -7,7 +7,7 @@ import NoteInput from '../../components/NoteInput';
 import ViewToggle from '../../components/ViewToggle';
 import NoteList from '../../components/NoteList';
 import AIPopup from '../../components/AIPopup';
-import { MessageSquare, Sparkles, LogOut, User } from 'lucide-react';
+import { Menu, Plus, Settings, LogOut, User, AlertTriangle, CheckCircle } from 'lucide-react'; // Updated icons
 import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from '../context/AuthContext';
 import Link from 'next/link';
@@ -17,7 +17,7 @@ interface Note {
   id: string;
   content: string;
   pinned: boolean;
-  color: string;
+  color: string; // Will be unused with Todoist theme, but keep for data structure
   createdAt: Date;
   updatedAt?: Date;
   isOptimistic?: boolean;
@@ -46,7 +46,7 @@ interface Message {
 export default function AppDashboard() {
   const { user, logout, isLoading: authLoading } = useAuth();
   const [notes, setNotes] = useState<Note[]>([]);
-  const [view, setView] = useState('grid');
+  const [view, setView] = useState('list'); // Default to list view for Todoist style
   const [search, setSearch] = useState('');
   const [aiMsgs, setAiMsgs] = useState<Message[]>([]);
   const [aiLoading, setAiLoading] = useState(false);
@@ -55,234 +55,151 @@ export default function AppDashboard() {
   const [pagination, setPagination] = useState<Pagination>({
     total: 0,
     page: 0,
-    limit: 20,
+    limit: 20, // Keep pagination limit
     totalPages: 0,
     hasMore: false
   });
 
+  // Color randomization is not very Todoist-like, tasks usually have uniform appearance.
+  // We'll keep the function but not apply it, or apply a standard color.
   const getRandomColor = () => {
-    const colors = [
-      '#f3f4f6', // gray-100
-      '#fee2e2', // red-100
-      '#fef3c7', // amber-100
-      '#d1fae5', // emerald-100
-      '#dbeafe', // blue-100
-      '#ede9fe', // violet-100
-      '#fce7f3', // pink-100
-    ];
-    return colors[Math.floor(Math.random() * colors.length)];
+    // For Todoist, cards are typically white/light grey or dark grey in dark mode.
+    // This function becomes less relevant. We can assign a default or remove its usage.
+    return 'var(--secondary-accent)'; // Use CSS variable for card background
   };
 
-  const applyColors = (notesArray: Note[]): Note[] => {
+  const processNotes = (notesArray: Note[]): Note[] => {
     return notesArray.map(note => ({
       ...note,
-      color: getRandomColor(),
+      // color: getRandomColor(), // No longer using random colors per note
       createdAt: note.createdAt ? new Date(note.createdAt) : new Date(),
+      updatedAt: note.updatedAt ? new Date(note.updatedAt) : undefined,
     }));
   };
 
   const fetchNotes = async (page = 1, reset = true, retryCount = 0) => {
     const isInitialLoad = page === 1;
-    
-    if (isInitialLoad && reset) {
-      setLoadingNotes(true);
-    } else {
-      setLoadingMore(true);
-    }
+    if (isInitialLoad && reset) setLoadingNotes(true);
+    else setLoadingMore(true);
     
     try {
       const { data } = await axios.get<NotesResponse>(`/api/notes?page=${page}&limit=${pagination.limit}`);
+      const processedNotes = processNotes(data.notes);
       
-      // Apply colors to notes
-      const coloredNotes = applyColors(data.notes);
-      
-      if (reset) {
-        // Replace all notes (filter out optimistic ones that might already be saved)
-        const optimisticNotes = notes.filter(n => n.isOptimistic);
-        setNotes([...optimisticNotes, ...coloredNotes]);
-      } else {
-        // Append to existing notes
-        setNotes(prev => {
-          // Remove optimistic notes from previous array before appending new notes
-          const nonOptimistic = prev.filter(n => !n.isOptimistic);
-          return [...nonOptimistic, ...coloredNotes];
-        });
-      }
+      setNotes(prev => {
+        const existingNotes = reset ? [] : prev.filter(n => !n.isOptimistic);
+        // Prevent duplicates if retrying or loading more
+        const newNotes = processedNotes.filter(pn => !existingNotes.some(en => en.id === pn.id));
+        return [...existingNotes, ...newNotes];
+      });
       
       setPagination(data.pagination);
     } catch (error: any) {
       console.error("Error fetching notes:", error);
-      
-      // Check if this is an authentication error (401)
       if (error?.response?.status === 401 && retryCount < 3) {
-        console.log(`Authentication not ready yet, retrying (${retryCount + 1}/3)...`);
-        
-        // Wait a bit longer with each retry
-        const delay = (retryCount + 1) * 700;
-        
-        // Retry the request after a delay
-        setTimeout(() => {
-          fetchNotes(page, reset, retryCount + 1);
-        }, delay);
-        
-        // Don't clear loading state when we're going to retry
-        return;
+        setTimeout(() => fetchNotes(page, reset, retryCount + 1), (retryCount + 1) * 700);
+        return; // Don't clear loading state if retrying
       }
-    } finally {
-      // Only clear loading state if we're not retrying
+      // For other errors, ensure loading states are cleared
       setLoadingNotes(false);
       setLoadingMore(false);
+    } finally {
+      // Only clear loading state if not retrying
+      if (!(error?.response?.status === 401 && retryCount < 3)) {
+        setLoadingNotes(false);
+        setLoadingMore(false);
+      }
     }
   };
 
   const loadMoreNotes = useCallback(() => {
-    if (pagination.hasMore && !loadingMore) {
+    if (pagination.hasMore && !loadingMore && !loadingNotes) { // Added !loadingNotes to prevent parallel loads
       fetchNotes(pagination.page + 1, false);
     }
-  }, [pagination.hasMore, pagination.page, loadingMore]);
+  }, [pagination.hasMore, pagination.page, loadingMore, loadingNotes]);
 
   const createNote = async (content: string) => {
-    // Create optimistic note that will be immediately shown in UI
     const optimisticNote: Note = {
-      id: uuidv4(), // Temporary ID
+      id: uuidv4(),
       content,
       pinned: false,
-      color: getRandomColor(),
+      color: getRandomColor(), // Still assign a color, though it might not be used by NoteCard directly
       createdAt: new Date(),
       isOptimistic: true,
     };
-
-    // Add optimistic note to state immediately
-    setNotes(prev => [optimisticNote, ...prev]);
+    setNotes(prev => [optimisticNote, ...prev.filter(n => n.id !== optimisticNote.id)]);
 
     try {
-      // Send actual API request
       const { data } = await axios.post('/api/notes', { content });
-      
-      // Replace optimistic note with real one from API
-      setNotes(prev => prev.map(note => 
-        note.isOptimistic && note.content === content 
-          ? { ...data.note, color: note.color } // Keep the same color
-          : note
-      ));
-
-      // Update pagination if needed
-      setPagination(prev => ({
-        ...prev,
-        total: prev.total + 1
-      }));
+      const savedNote = processNotes([data.note])[0];
+      setNotes(prev => prev.map(n => n.id === optimisticNote.id ? savedNote : n));
+      setPagination(prev => ({ ...prev, total: prev.total + 1 }));
     } catch (error) {
       console.error("Error creating note:", error);
-      
-      // Mark optimistic note as having an error
-      setNotes(prev => prev.map(note => 
-        note.isOptimistic && note.content === content
-          ? { ...note, isError: true }
-          : note
-      ));
-
-      // Show a toast or notification here if you have one
+      setNotes(prev => prev.map(n => n.id === optimisticNote.id ? { ...n, isError: true, isOptimistic: false } : n));
       throw error;
     }
   };
 
   const updateNote = async (id: string, content: string) => {
-    // Apply optimistic update immediately
-    setNotes(prevNotes => 
-      prevNotes.map(note => 
-        note.id === id ? { ...note, content, updatedAt: new Date() } : note
-      )
+    const originalNotes = [...notes];
+    setNotes(prev =>
+      prev.map(n => n.id === id ? { ...n, content, updatedAt: new Date(), isOptimistic: true, isError: false } : n)
     );
-
     try {
-      // Send actual API request
-      await axios.patch(`/api/notes/${id}`, { content });
+      const { data } = await axios.patch(`/api/notes/${id}`, { content });
+      const updatedNote = processNotes([data.note])[0];
+      setNotes(prev => prev.map(n => n.id === id ? updatedNote : n));
     } catch (error) {
       console.error("Error updating note:", error);
-      
-      // Revert optimistic update on error
-      fetchNotes(1, true);
-      
-      // Show a toast or notification here if you have one
+      setNotes(originalNotes.map(n => n.id === id ? { ...n, isError: true, isOptimistic: false } : n));
       throw error;
     }
   };
 
   const deleteNote = async (id: string) => {
-    // Get a copy of the note before removing it
     const noteToDelete = notes.find(note => note.id === id);
-    
-    // Remove note optimistically from state
-    setNotes(prevNotes => prevNotes.filter(note => note.id !== id));
-    
+    setNotes(prev => prev.filter(note => note.id !== id));
     try {
-      // Send actual API request
       await axios.delete(`/api/notes/${id}`);
-      
-      // Update pagination
-      setPagination(prev => ({
-        ...prev,
-        total: Math.max(0, prev.total - 1)
-      }));
+      setPagination(prev => ({ ...prev, total: Math.max(0, prev.total - 1) }));
     } catch (error) {
       console.error("Error deleting note:", error);
-      
-      // If deletion fails, put the note back
-      if (noteToDelete) {
-        setNotes(prev => [...prev, noteToDelete]);
-      }
-      
-      // Show a toast or notification here if you have one
+      if (noteToDelete) setNotes(prev => [...prev, noteToDelete]); // Revert optimistic deletion
     }
   };
 
   const togglePinNote = async (id: string) => {
-    // Find the note to pin/unpin
     const note = notes.find((n) => n.id === id);
-    
-    if (note) {
-      const newPinnedStatus = !note.pinned;
-      
-      // Update optimistically
-      setNotes(prevNotes => 
-        prevNotes.map(note => 
-          note.id === id ? { ...note, pinned: newPinnedStatus } : note
-        )
-      );
-      
-      try {
-        // Send actual API request
-        await axios.patch(`/api/notes/${id}/pin`, { pinned: newPinnedStatus });
-      } catch (error) {
-        console.error("Error toggling pin status:", error);
-        
-        // Revert optimistic update on error
-        setNotes(prevNotes => 
-          prevNotes.map(note => 
-            note.id === id ? { ...note, pinned: !newPinnedStatus } : note
-          )
-        );
-        
-        // Show a toast or notification here if you have one
-      }
+    if (!note) return;
+    const newPinnedStatus = !note.pinned;
+    const originalNotes = [...notes];
+
+    setNotes(prev =>
+      prev.map(n => n.id === id ? { ...n, pinned: newPinnedStatus, isOptimistic: true, isError: false } : n)
+    );
+    try {
+      const { data } = await axios.patch(`/api/notes/${id}/pin`, { pinned: newPinnedStatus });
+      const updatedNote = processNotes([data.note])[0];
+      setNotes(prev => prev.map(n => n.id === id ? updatedNote : n));
+    } catch (error) {
+      console.error("Error toggling pin status:", error);
+      setNotes(originalNotes.map(n => n.id === id ? { ...n, isError: true, isOptimistic: false } : n));
     }
   };
 
-  // Effect for initial load
   useEffect(() => {
-    fetchNotes(1, true);
-  }, []);
-
-  // Effect for search - reset pagination and fetch first page
-  useEffect(() => {
-    if (search) {
-      // TODO: Implement server-side search API
-      // For now, we'll just filter client-side
+    if (!authLoading && user) { // Ensure user is loaded before fetching
+      fetchNotes(1, true);
     }
+  }, [authLoading, user]); // Depend on authLoading and user
+
+  useEffect(() => {
+    // Client-side search for simplicity. Todoist likely uses server-side.
+    // This effect doesn't trigger a re-fetch, just filters displayed notes.
   }, [search]);
 
-  // Get the filtered notes based on search input
-  const filtered = search 
+  const filteredNotes = search
     ? notes.filter(note => note.content.toLowerCase().includes(search.toLowerCase()))
     : notes;
 
@@ -291,110 +208,112 @@ export default function AppDashboard() {
     setAiLoading(true);
     try {
       const response = await axios.post('/api/query', { q });
-      if (response.data && response.data.answer) {
-        setAiMsgs((msgs) => [...msgs, { sender: 'ai', text: response.data.answer }]);
-      } else {
-        setAiMsgs((msgs) => [...msgs, { sender: 'ai', text: "Sorry, I couldn't find a relevant answer in your notes." }]);
-      }
+      setAiMsgs(prev => [...prev, { sender: 'ai', text: response.data.answer || "Sorry, I couldn't find an answer." }]);
     } catch (error) {
       console.error("Error fetching AI response:", error);
-      setAiMsgs((msgs) => [...msgs, { sender: 'ai', text: "Sorry, I encountered an error while trying to answer." }]);
+      setAiMsgs(prev => [...prev, { sender: 'ai', text: "Sorry, an error occurred." }]);
     } finally {
       setAiLoading(false);
     }
   };
 
-  // Handle loading state for authentication
   if (authLoading) {
-    return null; // No need to show loading state - middleware ensures this page only loads for auth users
+    // Optional: A more Todoist-like full-page loader
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[var(--background)]">
+        <Loader2 size={32} className="text-[var(--primary-accent)] animate-spin" />
+      </div>
+    );
   }
 
-  // Group handlers for the note list component
-  const handlers = {
-    edit: updateNote,
-    delete: deleteNote,
-    pin: togglePinNote,
-  };
-
-  // Check if user's email is verified
+  const handlers = { edit: updateNote, delete: deleteNote, pin: togglePinNote };
   const isUserEmailVerified = user?.emailVerified || user?.providerData[0]?.providerId === 'google.com';
 
+  // Todoist UI: Clean header, main content area, possibly a sidebar (out of scope for now).
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      {/* Email verification banner */}
+    <div className="min-h-screen flex flex-col bg-[var(--background)] text-[var(--foreground)]">
+      {/* Email verification banner - styled to be less intrusive or more integrated */}
       {!isUserEmailVerified && (
-        <div className="bg-yellow-600 dark:bg-yellow-700 py-2">
-          <div className="max-w-5xl mx-auto px-4 sm:px-6 text-center text-white text-sm">
-            <span className="font-semibold">Your email is not verified.</span> Please check your inbox for a verification link or{' '}
-            <Link href="/login" className="underline font-medium hover:text-yellow-100">
-              click here
-            </Link>{' '}
-            to resend the verification email.
+        <div className="bg-yellow-100 dark:bg-yellow-700/30 border-b border-yellow-300 dark:border-yellow-600/50 py-2.5 text-yellow-800 dark:text-yellow-200">
+          <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center text-sm flex items-center justify-center">
+            <AlertTriangle size={18} className="mr-2 flex-shrink-0" />
+            <span>Your email is not verified.</span>
+            <Link href="/login" className="underline font-medium hover:text-yellow-900 dark:hover:text-yellow-100 ml-1.5">
+              Resend verification
+            </Link>
           </div>
         </div>
       )}
 
-      {/* Header with user information and logout */}
-      <header className="bg-white dark:bg-gray-800 sticky top-0 z-10 shadow-sm">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-4">
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="bg-white p-1 rounded">
-                <img src="/logo.svg" alt="RECALL" className="h-8" />
-              </div>
-              <div className="inline-flex items-center px-2 py-1 rounded-full bg-red-100 dark:bg-[#CD1B1B]/20">
-                <Sparkles size={14} className="text-[#CD1B1B] dark:text-[#CD1B1B] mr-1" />
-                <span className="text-xs font-medium text-[#CD1B1B] dark:text-[#CD1B1B]/90">Chat with your notes</span>
-              </div>
-            </div>
-            
-            <div className="w-full sm:w-auto sm:flex-1 sm:max-w-xl">
-              <SearchBar onSearch={setSearch} onAIQuery={handleAI} />
-            </div>
+      {/* Header - Todoist style: often simpler, menu icon, search, add task, user/settings */}
+      <header className="sticky top-0 z-20 bg-[var(--background)] dark:bg-neutral-800/80 backdrop-blur-md border-b border-gray-200 dark:border-neutral-700/80">
+        <div className="max-w-full mx-auto px-3 sm:px-5 h-14 flex items-center justify-between">
+          {/* Left side: Menu (placeholder) and Home/Logo (optional) */}
+          <div className="flex items-center gap-2">
+            <button className="p-2 rounded hover:bg-gray-100 dark:hover:bg-neutral-700">
+              <Menu size={20} />
+            </button>
+             {/* <img src="/logo.svg" alt="RECALL" className="h-7 hidden sm:block" /> */}
+          </div>
 
-            {/* User profile and logout */}
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center">
-                  <User size={16} className="text-gray-300" />
-                </div>
-                <span className="text-sm text-gray-600 dark:text-gray-300 hidden sm:inline">{user?.displayName || user?.email}</span>
-              </div>
-              <button 
-                onClick={logout}
-                className="text-sm flex items-center gap-1 py-1 px-2 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-              >
-                <LogOut size={14} />
-                <span className="hidden sm:inline">Sign out</span>
+          {/* Center: Search Bar - more prominent in Todoist */}
+          <div className="flex-1 mx-4 sm:mx-8 max-w-xl">
+            <SearchBar onSearch={setSearch} onAIQuery={handleAI} />
+          </div>
+
+          {/* Right side: Add Task, AI Sparkles (optional), User/Settings */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <button onClick={() => document.querySelector<HTMLButtonElement>('button[aria-label="Add task"]')?.click()} className="p-2 rounded hover:bg-gray-100 dark:hover:bg-neutral-700 text-[var(--primary-accent)]">
+              <Plus size={22} />
+            </button>
+            {/* <button className="p-2 rounded hover:bg-gray-100 dark:hover:bg-neutral-700">
+              <Sparkles size={20} className="text-gray-600 dark:text-gray-300"/>
+            </button> */}
+            <button className="p-2 rounded hover:bg-gray-100 dark:hover:bg-neutral-700">
+              <Settings size={20} className="text-gray-600 dark:text-gray-300"/>
+            </button>
+            <div className="relative group">
+              <button className="w-8 h-8 rounded-full bg-gray-200 dark:bg-neutral-700 flex items-center justify-center text-sm font-medium text-gray-600 dark:text-gray-300">
+                {user?.email?.[0]?.toUpperCase() || <User size={16} />}
               </button>
+              <div className="absolute right-0 mt-1 w-48 bg-[var(--background)] dark:bg-neutral-800 rounded-md shadow-lg py-1 border border-gray-200 dark:border-neutral-700 opacity-0 group-hover:opacity-100 transition-opacity invisible group-hover:visible">
+                <div className="px-3 py-2 border-b border-gray-200 dark:border-neutral-700">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Signed in as</p>
+                  <p className="text-sm font-medium truncate">{user?.displayName || user?.email}</p>
+                </div>
+                <a href="#" onClick={logout} className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-100 dark:hover:bg-neutral-700/70 w-full text-left">
+                  <LogOut size={15} /> Sign out
+                </a>
+              </div>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-6">
-        <div className="space-y-6">
-          {/* Note Input */}
+      {/* Main Content - Todoist: typically a single column list */}
+      <main className="flex-grow w-full max-w-3xl mx-auto px-3 sm:px-4 py-5 sm:py-6">
+        {/* Today's Date or Project Title - Placeholder */}
+        {/* <h1 className="text-xl font-semibold mb-4">Today</h1> */}
+
+        <div className="space-y-0"> {/* Removed space-y-6, NoteCard has mb-3 */}
           <NoteInput onSave={createNote} />
           
-          {/* Controls */}
-          <div className="flex flex-wrap justify-between items-center gap-3">
-            <ViewToggle view={view} onChange={setView} />
-            {filtered.length > 0 && (
-              <div className="text-sm text-gray-500 dark:text-gray-400">
-                Showing {filtered.length} of {pagination.total} {pagination.total === 1 ? 'note' : 'notes'}
+          {/* Controls: ViewToggle might be less prominent or removed for strict Todoist list view */}
+          <div className="flex flex-wrap justify-end items-center gap-3 mb-3">
+             <ViewToggle view={view} onChange={setView} />
+            {/* {filteredNotes.length > 0 && (
+              <div className="text-xs text-gray-500 dark:text-gray-400">
+                {pagination.total} {pagination.total === 1 ? 'task' : 'tasks'}
                 {search && ` matching "${search}"`}
               </div>
-            )}
+            )} */}
           </div>
           
-          {/* Note List with Infinite Scrolling */}
           <NoteList 
-            notes={filtered} 
-            view={view} 
+            notes={filteredNotes}
+            view={view} // Pass current view (should be 'list' for Todoist)
             handlers={handlers} 
-            loading={loadingNotes}
+            loading={loadingNotes && notes.length === 0} // Only show main loader if no notes loaded yet
             loadingMore={loadingMore}
             hasMore={pagination.hasMore}
             onLoadMore={loadMoreNotes}
@@ -402,8 +321,7 @@ export default function AppDashboard() {
         </div>
       </main>
 
-      {/* AI Popup */}
       <AIPopup messages={aiMsgs} onClose={() => setAiMsgs([])} loading={aiLoading} />
     </div>
   );
-} 
+}

@@ -30,7 +30,7 @@ function SearchBar({ onSearch, onAIQuery }) {
   const clearSearch = () => {
     setQuery('');
     onSearch('');
-    setAiMode(false);
+    setAiMode(false); // Optionally reset AI mode as well, or keep it as is
   };
 
   const handleKey = async (e) => {
@@ -49,66 +49,69 @@ function SearchBar({ onSearch, onAIQuery }) {
 
   const toggleAiMode = () => {
     setAiMode(!aiMode);
-    if (query && !aiMode) {
-      // Clear regular search when switching to AI mode
-      onSearch('');
+    if (query && !aiMode) { // If switching to AI mode with an existing query
+      onSearch(''); // Clear regular search results
+    } else if (query && aiMode) { // If switching from AI to regular with an existing query
+      setLoading(true);
+      debouncedSearch(query.toLowerCase()); // Trigger search for the current query
     }
   };
 
-  // Border styles based on mode
-  const borderStyle = aiMode ? 
-    "border-2 border-[#CD1B1B] dark:border-[#CD1B1B]" : 
-    "border border-gray-200 dark:border-gray-700";
+  // Todoist-like search bar: typically a light grey background, rounded, with an icon.
+  // AI mode can have a subtle visual difference, perhaps a border color or icon color.
+
+  const inputBaseClasses = "w-full py-2.5 pl-10 pr-10 outline-none transition-colors duration-150 ease-in-out appearance-none text-sm";
+  const inputBgColor = "bg-[var(--secondary-accent)] dark:bg-[var(--secondary-accent)]";
+  const inputTextColor = "text-[var(--foreground)] dark:text-[var(--foreground)] placeholder-gray-500 dark:placeholder-gray-400";
+  const inputBorderRadius = "rounded-md"; // Todoist uses slightly rounded rect, not full pill
+
+  const aiModeRing = aiMode ? "ring-2 ring-[var(--primary-accent)]" : "ring-1 ring-gray-300 dark:ring-gray-600 focus-within:ring-2 focus-within:ring-[var(--primary-accent)]";
 
   return (
-    <div className="relative flex w-full shadow-sm overflow-hidden rounded-full">
-      <div className="flex-1 flex items-center relative">
-        <Search 
-          className="absolute left-4 text-gray-400 z-10" 
-          size={18} 
-          aria-hidden="true" 
-        />
-        <input
-          type="text"
-          aria-label={aiMode ? "Ask AI about your notes" : "Search notes"}
-          className={`w-full py-3 pl-12 pr-10 outline-none rounded-l-full transition-colors bg-white dark:bg-gray-800 ${borderStyle} border-r-0 ${
-            aiMode ? 'text-[#CD1B1B] dark:text-[#CD1B1B]' : 'text-gray-800 dark:text-gray-200'
-          } appearance-none`}
-          placeholder={aiMode ? "Ask Recall about your notes..." : "Search your memories..."}
-          value={query}
-          onChange={handleChange}
-          onKeyDown={handleKey}
-          spellCheck="false"
-        />
-        {query && !loading && (
-          <button
-            onClick={clearSearch}
-            className="absolute right-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700"
-            aria-label="Clear search"
-            type="button"
-          >
-            <X size={16} />
-          </button>
-        )}
-        {loading && (
-          <div className="absolute right-3">
-            <Spinner size={18} />
-          </div>
-        )}
-      </div>
+    <div className={`relative flex w-full items-center ${inputBorderRadius} ${inputBgColor} ${aiModeRing} shadow-sm`}>
+      <Search
+        className="absolute left-3 text-gray-400 dark:text-gray-500 z-10"
+        size={16}
+        aria-hidden="true"
+      />
+      <input
+        type="text"
+        aria-label={aiMode ? "Ask AI about your notes" : "Search notes"}
+        className={`${inputBaseClasses} ${inputBgColor} ${inputTextColor} ${inputBorderRadius} border-transparent focus:border-transparent focus:ring-0`}
+        placeholder={aiMode ? "Ask Recall..." : "Search..."}
+        value={query}
+        onChange={handleChange}
+        onKeyDown={handleKey}
+        spellCheck="false"
+      />
+      {query && !loading && (
+        <button
+          onClick={clearSearch}
+          className="absolute right-10 mr-1 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 p-1 rounded-full"
+          aria-label="Clear search"
+          type="button"
+        >
+          <X size={16} />
+        </button>
+      )}
+      {loading && (
+        <div className="absolute right-10 mr-1">
+          <Spinner size={16} />
+        </div>
+      )}
       
       <button
         onClick={toggleAiMode}
-        className={`flex items-center justify-center px-4 rounded-r-full transition-colors ${borderStyle} border-l-0 ${
+        className={`flex items-center justify-center p-2.5 rounded-r-md transition-colors ${
           aiMode 
-            ? 'bg-[#CD1B1B] hover:bg-red-700 text-white' 
-            : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300'
+            ? 'text-[var(--primary-accent)] hover:bg-red-500/10'
+            : 'text-gray-500 hover:text-[var(--primary-accent)] hover:bg-gray-500/10 dark:text-gray-400 dark:hover:text-[var(--primary-accent)]'
         }`}
         aria-label={aiMode ? "Switch to regular search" : "Switch to AI search"}
         aria-pressed={aiMode}
         type="button"
       >
-        <Sparkles size={18} className={aiMode ? 'text-white' : 'text-gray-500 dark:text-gray-400'} />
+        <Sparkles size={18} />
       </button>
     </div>
   );
