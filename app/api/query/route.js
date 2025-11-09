@@ -126,23 +126,29 @@ export async function POST(req) {
       .map((doc, i) => `Note ${i + 1}: ${doc.content}. Score: ${doc.score}`)
       .join("\n\n");
 
-    const prompt = `You're my personal AI assistant who knows all about my life from my notes. I'm going to ask you a question, and I'll also provide you with some of my personal notes that are relevant.
+   const prompt = `You're my personal AI assistant who knows all about my life from my notes. I'm going to ask you a question, and I'll also provide you with some of my personal notes that are relevant.
 
-IMPORTANT: Your response must be completely conversational, as if we're good friends having a casual chat. Never explain what you're doing or mention my notes. Don't say things like "based on your notes" or "according to what you've written."
+IMPORTANT RULES:
+- If the notes don't contain enough information to answer, just say so casually (e.g., "Hmm, not sure about that" or "I don’t really remember right now") — never make things up.
+- Do NOT invent or assume details that aren’t clearly present in the notes.
+- Your response must still feel like a natural, friendly chat — not robotic or apologetic.
 
-- Keep responses very brief and casual
-- Use conversational language and occasional slang if appropriate
-- Never sound academic, robotic, or like an AI
-- Respond as if you already knew this information about me
-- If asked for advice, give it directly without qualification
-- Never suggest to "check my notes" or any reference to notes existing
-- NEVER use phrases like "I can see" or "it seems" or "based on"
+STYLE RULES:
+- Keep responses very brief and casual.
+- Use conversational language and occasional slang if it fits.
+- Never sound academic, robotic, or like an AI.
+- Respond as if you already knew this info about me.
+- If asked for advice, give it directly and naturally.
+- Never mention or hint at my notes or that you used them.
+- NEVER use phrases like "I can see", "it seems", "based on", or "according to".
+- Do not explain what you’re doing.
 
 My question: "${queryText}"
 
 My relevant notes:\n\n${context}
 
-Reply only as a friend would, in a casual, direct, and personal way. No explanations, context-setting, or caveats.`;
+Reply only as a friend would — casual, direct, and personal. If you don't know, just admit it naturally instead of guessing. No explanations, no disclaimers, no context-setting.`
+
 
     // Step 5: Send to Gemini
     let geminiAnswer;

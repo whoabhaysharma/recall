@@ -15,7 +15,7 @@ const genAI = new GoogleGenAI({apiKey : API_KEY});
  */
 export async function queryGeminiFlash(prompt, generationConfig = {}) {
     try {
-      const model = 'gemini-2.0-flash';
+      const model = 'gemini-2.5-flash';
       const config = {
         responseMimeType: 'text/plain',
         ...generationConfig, // Allow overriding defaults
@@ -60,7 +60,7 @@ export async function queryGeminiFlash(prompt, generationConfig = {}) {
  * @returns {Promise<number[] | null>} A Promise that resolves with the embedding vector
  * (an array of numbers), or null on error.
  */
-export async function generateEmbeddings(text, modelName = 'gemini-embedding-exp-03-07') {
+export async function generateEmbeddings(text, modelName = 'gemini-embedding-001') {
     try {
         const response = await genAI.models.embedContent({
             model: modelName,
