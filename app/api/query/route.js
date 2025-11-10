@@ -86,6 +86,7 @@ export async function POST(req) {
       results = await index.query({
         topK: 5,
         vector,
+        minScore: 0.5,
         includeMetadata: true,
         includeValues: false,
         filter: { userId: userId }, // Filter by user ID in Pinecone
